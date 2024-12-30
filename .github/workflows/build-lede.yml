@@ -60,5 +60,5 @@ jobs:
       uses: actions/upload-artifact@main
       with:
         name: ${{ env.DEVICE_NAME }}-squashfs
-        path: lede/bin/targets/*/*/*squashfs*
+        path: lede/bin/targets/*/*/*(squashfs|ext4)*
         
