@@ -5,9 +5,9 @@ on:
   workflow_dispatch:
     inputs:
       device:
-        description: '请输入设备型号,比如: ax6s wr30u-stock x86_64_DEVICE_generic'
+        description: '请输入设备型号'
         required: true
-        default: 'ax6s'
+        default: 'x86_64_DEVICE_generic'
 
 jobs:
   build:
@@ -16,6 +16,21 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@main
+
+    - name: Free Disk Space (Ubuntu)
+      uses: jlumbroso/free-disk-space@main
+      with:
+        # this might remove tools that are actually needed,
+        # if set to "true" but frees about 6 GB
+        tool-cache: false
+        
+        # all of these default to true, but feel free to set to
+        # "false" if necessary for your workflow
+        android: true
+        dotnet: true
+        haskell: true
+        large-packages: true
+        docker-images: true
 
     - name: Initialization environment
       run: |
