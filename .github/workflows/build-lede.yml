@@ -34,8 +34,13 @@ jobs:
 
     - name: Clone source code
       run: |
-        git clone https://github.com/coolsnowwolf/lede.git && cp -r files lede && chmod 755 -R lede/files && cat feeds.buildinfo >>lede/feeds.conf.default
+        git clone https://github.com/coolsnowwolf/lede.git && cat feeds.buildinfo >>lede/feeds.conf.default
         cat lede/feeds.conf.default
+
+    - name: 修改IP地址
+      run: |
+        cd lede
+        sed -i 's/192.168.1.1/192.168.0.11/g' package/base-files/files/bin/config_generate
 
     - name: Update feeds
       run: cd lede && ./scripts/feeds update -a
@@ -61,9 +66,21 @@ jobs:
     - name: Compile ${{ env.DEVICE_NAME }} firmware
       run: cd lede && make -j$(nproc) defconfig download clean world
 
+    - name: 整理固件
+      id: organize
+      run: |
+        cd lede
+        mkdir outfile
+        cp -rf bin/targets/*/*/*.{xz,gz} ./outfile
+        cp -rf .config ./outfile/config.txt
+        rm -rf bin/targets/*/*/packages
+        
+        cd outfile
+        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+
     - name: Upload firmware to workflow directory
       uses: actions/upload-artifact@main
       with:
-        name: ${{ env.DEVICE_NAME }}-squashfs
-        path: lede/bin/targets/*/*/*squashfs*
-        
+        name: ${{ env.DEVICE_NAME }}-firmware
+        path: ${{ env.FIRMWARE }}
+
