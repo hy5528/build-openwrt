@@ -58,8 +58,9 @@ jobs:
         ./scripts/feeds install -a
 
     - name: Load custom configuration
-        if ! target_device=$(grep -m 1 "^config TARGET_.*$(echo ${{ inputs.device }} | xargs)" openwrt/tmp/.config-target.in); then
       run: |
+        target_device=$(grep -m 1 "^config TARGET_.*$(echo ${{ inputs.device }} | xargs)" openwrt/tmp/.config-target.in)
+        if [ -z "$target_device" ]; then
           echo "Error: The ${{ inputs.device }} device you input does not exist!"
           exit 1
         fi
