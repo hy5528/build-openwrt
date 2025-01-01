@@ -41,8 +41,13 @@ jobs:
 
     - name: Clone source code
       run: |
-        git clone https://github.com/openwrt/openwrt.git && cp -r files openwrt && chmod 755 -R openwrt/files && cat feeds.buildinfo >>openwrt/feeds.conf.default
+        git clone -b v24.10.0-rc4 https://github.com/openwrt/openwrt && cat feeds.buildinfo >>openwrt/feeds.conf.default
         cat openwrt/feeds.conf.default
+
+    - name: 修改IP地址
+      run: |
+        cd openwrt
+        sed -i 's/192.168.1.1/192.168.0.22/g' package/base-files/files/bin/config_generate
 
     - name: Update feeds
       run: cd openwrt && ./scripts/feeds update -a
@@ -69,9 +74,22 @@ jobs:
     - name: Compile ${{ env.DEVICE_NAME }} firmware
       run: cd openwrt && make -j$(nproc) defconfig download clean world
 
+    - name: 整理固件
+      id: organize
+      run: |
+        cd openwrt
+        mkdir outfile
+        cp -rf bin/targets/*/*/*.tar ./outfile
+        cp -rf bin/targets/*/*/*.xz ./outfile
+        cp -rf .config ./outfile/config.txt
+        rm -rf bin/targets/*/*/packages
+        
+        cd outfile
+        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+
     - name: Upload firmware to workflow directory
       uses: actions/upload-artifact@main
       with:
-        name: ${{ env.DEVICE_NAME }}-squashfs
-        path: openwrt/bin/targets/*/*/*squashfs*
-        
+        name: ${{ env.DEVICE_NAME }}-firmware
+        path: ${{ env.FIRMWARE }}
+
