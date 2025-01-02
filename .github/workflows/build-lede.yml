@@ -71,7 +71,7 @@ jobs:
       run: |
         cd lede
         mkdir outfile
-        cp -rf bin/targets/*/*/*.{xz,gz} ./outfile
+        cp -rf bin/targets/*/*/*.{xz,gz} ./outfile || true
         cp -rf .config ./outfile/config.txt
         rm -rf bin/targets/*/*/packages
         
