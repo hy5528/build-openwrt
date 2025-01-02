@@ -91,4 +91,3 @@ jobs:
       with:
         name: ${{ env.DEVICE_NAME }}-firmware
         path: ${{ env.FIRMWARE }}
-
