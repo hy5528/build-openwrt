@@ -69,13 +69,11 @@ jobs:
     - name: 整理固件
       id: organize
       run: |
-        cd lede/bin/targets/*/*
-        rm -rf packages feeds.buildinfo version.buildinfo sha256sums profiles.json *.sha *.manifest
-        cd /
         cd lede
         mkdir outfile
-        cp -rf bin/targets/*/*
+        cp -rf bin/targets/*/*/*.gz ./outfile
         cp -rf .config ./outfile/config.txt
+        rm -rf bin/targets/*/*/packages
         
         cd outfile
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV

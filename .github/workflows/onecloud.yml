@@ -84,7 +84,7 @@ jobs:
       run: |
         cd openwrt
         mkdir outfile
-        cp -rf bin/targets/*/*/*.{xz,gz} ./outfile
+        cp -rf bin/targets/*/*/*.xz ./outfile
         cp -rf .config ./outfile/config.txt
         rm -rf bin/targets/*/*/packages
         
