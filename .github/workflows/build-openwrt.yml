@@ -43,13 +43,13 @@ jobs:
         git clone -b openwrt-24.10 https://github.com/openwrt/openwrt && cat feeds.buildinfo >>openwrt/feeds.conf.default
         cat openwrt/feeds.conf.default
 
+    - name: Update feeds
+      run: cd openwrt && ./scripts/feeds update -a
+
     - name: 修改IP地址
       run: |
         cd openwrt
         sed -i 's/192.168.1.1/192.168.0.11/g' package/base-files/files/bin/config_generate
-
-    - name: Update feeds
-      run: cd openwrt && ./scripts/feeds update -a
 
     - name: Install feeds
       run: cd openwrt && ./scripts/feeds install -a && ./scripts/feeds update -a && ./scripts/feeds install -a
