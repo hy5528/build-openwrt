@@ -40,7 +40,7 @@ jobs:
 
     - name: Clone source code
       run: |
-        git clone -b v24.10.0-rc4 https://github.com/openwrt/openwrt && cat feeds.buildinfo >>openwrt/feeds.conf.default
+        git clone -b openwrt-24.10 https://github.com/openwrt/openwrt && cat feeds.buildinfo >>openwrt/feeds.conf.default
         cat openwrt/feeds.conf.default
 
     - name: 修改IP地址
