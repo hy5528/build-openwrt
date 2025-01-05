@@ -17,6 +17,16 @@ jobs:
     - name: Checkout
       uses: actions/checkout@main
 
+    - name: Free Disk Space (Ubuntu)
+      uses: jlumbroso/free-disk-space@main
+      with:
+        tool-cache: false
+        android: true
+        dotnet: true
+        haskell: true
+        large-packages: true
+        docker-images: true
+
     - name: Initialization environment
       run: |
         sudo apt update
