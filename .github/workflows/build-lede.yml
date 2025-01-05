@@ -1,4 +1,4 @@
-name: Build LEDE
+name: LEDE
 run-name: ${{ inputs.device }}
 
 on:

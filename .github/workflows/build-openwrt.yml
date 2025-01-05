@@ -1,4 +1,4 @@
-name: Build OpenWrt
+name: OpenWrt
 run-name: ${{ inputs.device }}
 
 on:
