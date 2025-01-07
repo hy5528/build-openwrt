@@ -37,13 +37,13 @@ jobs:
         git clone https://github.com/coolsnowwolf/lede.git && cat feeds.buildinfo >>lede/feeds.conf.default
         cat lede/feeds.conf.default
 
-    - name: 修改IP地址
+    - name: Update feeds
+      run: cd lede && ./scripts/feeds update -a
+
+    - name: 修改登陆IP
       run: |
         cd lede
         sed -i 's/192.168.1.1/192.168.0.11/g' package/base-files/files/bin/config_generate
-
-    - name: Update feeds
-      run: cd lede && ./scripts/feeds update -a
 
     - name: Install feeds
       run: cd lede && ./scripts/feeds install -a && ./scripts/feeds update -a && ./scripts/feeds install -a
