@@ -23,15 +23,4 @@ if [ -n "$lan_ip_address" ]; then
   uci commit network
 fi
 
-if [ -n "$pppoe_username" -a "$pppoe_password" ]; then
-  uci set network.wan.proto=pppoe
-  uci set network.wan.username="$pppoe_username"
-  uci set network.wan.password="$pppoe_password"
-  uci commit network
-fi
-
-uci set wireless.radio0.country='US'
-uci set wireless.radio0.disabled='0'
-uci commit wireless
-
 echo "All done!"
