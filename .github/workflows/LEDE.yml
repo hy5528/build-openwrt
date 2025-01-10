@@ -1,4 +1,4 @@
-name: Build LEDE
+name: LEDE
 run-name: ${{ inputs.device }}
 
 on:
@@ -54,7 +54,6 @@ jobs:
         CONFIG_TARGET_$(echo $target_device | awk -F "_" '{print $2}')=y
         CONFIG_TARGET_$(echo $target_device | awk -F "_" '{print $2}')_$(echo $target_device | awk -F "_" '{print $3}')=y
         CONFIG_TARGET_$(echo $target_device | awk -F "_" '{print $2}')_$(echo $target_device | awk -F "_" '{print $3}')_DEVICE_${DEVICE_NAME}=y
-        CONFIG_PACKAGE_luci-theme-argon-mod=y
         EOF
         cat lede.config >>lede/.config && cat lede/.config
         echo "DEVICE_NAME=${DEVICE_NAME}" >> $GITHUB_ENV
@@ -62,9 +61,20 @@ jobs:
     - name: Compile ${{ env.DEVICE_NAME }} firmware
       run: cd lede && make -j$(nproc) defconfig download clean world
 
+    - name: 整理固件
+      id: organize
+      run: |
+        cd lede
+        mkdir outfile
+        cp -rf bin/targets/*/*/*.gz ./outfile
+        cp -rf .config ./outfile/config.txt
+        rm -rf bin/targets/*/*/packages
+        
+        cd outfile
+        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+
     - name: Upload firmware to workflow directory
       uses: actions/upload-artifact@main
       with:
-        name: ${{ env.DEVICE_NAME }}-squashfs
-        path: lede/bin/targets/*/*/*squashfs*
-        
+        name: ${{ env.DEVICE_NAME }}-LEDE-firmware
+        path: ${{ env.FIRMWARE }}
