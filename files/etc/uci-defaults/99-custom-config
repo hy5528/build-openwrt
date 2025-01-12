@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# 修改LAN接口的IP为192.168.0.12
+uci set network.lan.ipaddr='192.168.0.12'
+
+# 修改LAN接口的网关为192.168.0.1
+uci set network.lan.gateway='192.168.0.1'
+
+# 修改LAN接口的DNS为223.5.5.5
+uci set network.lan.dns='223.5.5.5'
+
+# 勾选LAN接口的“忽略此接口”选项
+uci set network.lan.ignore='1'
+
+# 设置系统管理密码为root
+echo -e "root\nroot" | passwd
+
+# 设置时区为中国
+uci set system.system.timezone='CST-8'
+uci commit system
+
+# 提交并应用配置
+uci commit network
+/etc/init.d/network restart
+/etc/init.d/system restart
+
+exit 0
