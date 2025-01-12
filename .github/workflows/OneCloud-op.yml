@@ -1,4 +1,4 @@
-name: 玩客云wrt
+name: 玩客云OpenWrt
 run-name: ${{ inputs.device }}
 
 on:
