@@ -34,16 +34,11 @@ jobs:
 
     - name: Clone source code
       run: |
-        git clone https://github.com/coolsnowwolf/lede && cat feeds.buildinfo >>lede/feeds.conf.default
+        git clone https://github.com/coolsnowwolf/lede && cp -r files lede && chmod 755 -R lede/files && cat feeds.buildinfo >>lede/feeds.conf.default
         cat lede/feeds.conf.default
 
     - name: Update feeds
       run: cd lede && ./scripts/feeds update -a
-
-    - name: 修改IP地址
-      run: |
-        cd lede
-        sed -i 's/192.168.1.1/192.168.0.12/g' package/base-files/files/bin/config_generate
 
     - name: Install feeds
       run: cd lede && ./scripts/feeds install -a && ./scripts/feeds update -a && ./scripts/feeds install -a
