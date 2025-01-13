@@ -43,8 +43,6 @@ jobs:
     - name: Install feeds
       run: |
         cd lede
-        rm -rf feeds/luci/applications/luci-app-passwall
-        rm -rf feeds/luci/applications/luci-app-openclash
         ./scripts/feeds install -a
 
     - name: Load custom configuration
