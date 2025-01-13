@@ -41,7 +41,11 @@ jobs:
       run: cd lede && ./scripts/feeds update -a
 
     - name: Install feeds
-      run: cd lede && ./scripts/feeds install -a && ./scripts/feeds update -a && ./scripts/feeds install -a
+      run: |
+        cd lede
+        rm -rf feeds/luci/applications/luci-app-passwall
+        rm -rf feeds/luci/applications/luci-app-openclash
+        ./scripts/feeds install -a
 
     - name: Load custom configuration
       run: |
