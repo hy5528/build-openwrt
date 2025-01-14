@@ -44,6 +44,7 @@ jobs:
       run: |
         cd openwrt
         sed -i 's/192.168.1.1/192.168.0.12/g' package/base-files/files/bin/config_generate
+        sed -i 's/+uci-firewall/+firewall/g' feeds/luci/applications/luci-app-firewall/Makefile
 
     - name: Install feeds
       run: cd openwrt && ./scripts/feeds install -a && ./scripts/feeds update -a && ./scripts/feeds install -a
