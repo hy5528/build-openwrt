@@ -40,7 +40,7 @@ jobs:
 
     - name: Clone source code
       run: |
-        git clone -b v24.10.0-rc5 https://github.com/openwrt/openwrt && cat feeds.buildinfo >>openwrt/feeds.conf.default
+        git clone -b v24.10.0-rc5 https://github.com/openwrt/openwrt && cp -r files openwrt && chmod 755 -R openwrt/files && cat feeds.buildinfo >>openwrt/feeds.conf.default
         cat openwrt/feeds.conf.default
 
     - name: Load onecloud
@@ -50,11 +50,6 @@ jobs:
 
     - name: Update feeds
       run: cd openwrt && ./scripts/feeds update -a
-
-    - name: 修改IP地址
-      run: |
-        cd openwrt
-        sed -i 's/192.168.1.1/192.168.0.23/g' package/base-files/files/bin/config_generate
 
     - name: Install feeds
       run: cd openwrt && ./scripts/feeds install -a && ./scripts/feeds update -a && ./scripts/feeds install -a
@@ -76,8 +71,24 @@ jobs:
         cat config.buildinfo >>openwrt/.config && cat openwrt/.config
         echo "DEVICE_NAME=${DEVICE_NAME}" >> $GITHUB_ENV
 
-    - name: Compile ${{ env.DEVICE_NAME }} firmware
-      run: cd openwrt && make -j$(nproc) defconfig download clean world
+    - name: Generate configuration file
+      run: cd openwrt && make defconfig
+
+    - name: Download packages
+      run: cd openwrt && make download -j16
+
+    - name: Compile firmware
+      run: |
+        cd openwrt
+        make -j$(nproc) || make -j1 V=s
+        echo "======================="
+        echo "Space usage:"
+        echo "======================="
+        df -h
+        echo "======================="
+        du -h --max-depth=1 ./ --exclude=build_dir --exclude=bin
+        du -h --max-depth=1 ./build_dir
+        du -h --max-depth=1 ./bin
 
     - name: 制作直刷包
       run: |
