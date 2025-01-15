@@ -51,7 +51,6 @@ jobs:
     - name: Update feeds
       run: |
         cd openwrt
-        git clone https://github.com/vernesong/OpenClash package/openclash
         ./scripts/feeds update -a
 
     - name: Install feeds
