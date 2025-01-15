@@ -49,10 +49,13 @@ jobs:
         chmod -Rf 755 openwrt/target/linux/amlogic
 
     - name: Update feeds
-      run: cd openwrt && ./scripts/feeds update -a
+      run: |
+        cd openwrt
+        git clone https://github.com/vernesong/OpenClash package/openclash
+        ./scripts/feeds update -a
 
     - name: Install feeds
-      run: cd openwrt && ./scripts/feeds install -a && ./scripts/feeds update -a && ./scripts/feeds install -a
+      run: cd openwrt && ./scripts/feeds install -a
 
     - name: Load custom configuration
       run: |
