@@ -39,8 +39,8 @@ jobs:
 
     - name: Load onecloud
       run: |
-        mv target/linux/meson openwrt/target/linux
-        chmod -Rf 755 openwrt/target/linux/meson
+        mv target/linux/amlogic openwrt/target/linux
+        chmod -Rf 755 openwrt/target/linux/amlogic
 
     - name: Update feeds
       run: |
