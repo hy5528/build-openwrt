@@ -34,13 +34,13 @@ jobs:
 
     - name: Clone source code
       run: |
-        git clone -b v24.10.0-rc4 https://github.com/openwrt/openwrt && cp -r files openwrt && chmod 755 -R openwrt/files && cat feeds.buildinfo >>openwrt/feeds.conf.default
+        git clone -b v24.10.0-rc5 https://github.com/openwrt/openwrt && cp -r files openwrt && chmod 755 -R openwrt/files && cat feeds.buildinfo >>openwrt/feeds.conf.default
         cat openwrt/feeds.conf.default
 
     - name: Load onecloud
       run: |
-        mv target/linux/amlogic openwrt/target/linux
-        chmod -Rf 755 openwrt/target/linux/amlogic
+        mv target/linux/meson openwrt/target/linux
+        chmod -Rf 755 openwrt/target/linux/meson
 
     - name: Update feeds
       run: |
