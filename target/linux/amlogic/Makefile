@@ -5,7 +5,7 @@
 include $(TOPDIR)/rules.mk
 
 ARCH:=arm
-BOARD:=meson
+BOARD:=amlogic
 BOARDNAME:=Amlogic Meson family
 FEATURES:=boot-part ext4 fpu legacy-sdcard squashfs usbgadget
 SUBTARGETS:=meson8b
@@ -21,13 +21,11 @@ include $(INCLUDE_DIR)/target.mk
 
 DEFAULT_PACKAGES += \
 	e2fsprogs \
-	kmod-usb-hid \
-	losetup \
 	mkf2fs \
 	automount \
-	parted \
+	resize2fs \
 	partx-utils \
-	resize2fs
+	losetup
 
 KERNELNAME:=Image dtbs
 
