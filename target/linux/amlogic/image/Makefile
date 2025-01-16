@@ -5,6 +5,8 @@
 include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/image.mk
 
+DEVICE_VARS += UBOOT_DEVICE_NAME
+
 FAT32_BLOCK_SIZE=1024
 FAT32_BLOCKS=$(shell echo $$(($(CONFIG_TARGET_KERNEL_PARTSIZE)*1024*1024/$(FAT32_BLOCK_SIZE))))
 
@@ -33,25 +35,57 @@ define Build/emmc-common
 		$(CONFIG_TARGET_KERNEL_PARTSIZE) $(CONFIG_TARGET_ROOTFS_PARTSIZE)
 endef
 
-### Devices ###
-define Device/Default
-  FILESYSTEMS := ext4
-  IMAGES := emmc.img
-  KERNEL_DEPENDS = $$(wildcard $(DTS_DIR)/$$(DEVICE_DTS).dts)
-  KERNEL_LOADADDR := 0x01080000
-  KERNEL_NAME := Image
-  KERNEL := kernel-bin | uImage none
-  PROFILES = Default $$(DEVICE_NAME)
+### Image scripts ###
+
+define Build/boot-common
+	# This creates a new folder copies the dtb (as amlogic.dtb) 
+	# and the kernel image (as kernel.img)
+	rm -fR $@.boot
+	mkdir -p $@.boot
+
+	$(CP) $(KDIR)/image-$(firstword $(DEVICE_DTS)).dtb $@.boot/amlogic.dtb
+	$(CP) $(IMAGE_KERNEL) $@.boot/kernel.img
+	$(CP) "$(STAGING_DIR_IMAGE)"/$(UBOOT_DEVICE_NAME)-u-boot-overlay.bin $@.boot/u-boot.emmc
 endef
 
-define Device/thunder-onecloud
-  DEVICE_DTS := amlogic/meson8b-onecloud
-  DEVICE_TITLE := Thunder OneCloud
-  KERNEL_LOADADDR := 0x00208000
-  IMAGE/emmc.img := boot-script onecloud | emmc-common $$(DEVICE_NAME)
+define Build/boot-combined
+	# This creates a new folder copies the dtbs (as amlogic*.dtb) 
+	# and the kernel image (as kernel.img)
+	rm -fR $@.boot
+	mkdir -p $@.boot
+
+	i=0; \
+	for dts in $(DEVICE_DTS); do \
+		$(CP) $(KDIR)/image-$${dts}.dtb $@.boot/amlogic$$(perl -e 'printf "%b\n",'$$i).dtb; \
+		let i+=1; \
+	done
+	$(CP) $(IMAGE_KERNEL) $@.boot/kernel.img
+	$(CP) "$(STAGING_DIR_IMAGE)"/$(UBOOT_DEVICE_NAME)-u-boot-overlay.bin $@.boot/u-boot.emmc
 endef
-ifeq ($(SUBTARGET),meson8b)
-  TARGET_DEVICES += thunder-onecloud
-endif
+
+define Build/boot-combined-script
+	# Make an U-boot image and copy it to the boot partition
+	mkimage -A arm -O linux -T script -C none -a 0 -e 0 -d aml_autoscript.cmd $@.boot/aml_autoscript
+	mkimage -A arm -O linux -T script -C none -a 0 -e 0 -d emmc_autoscript.cmd $@.boot/emmc_autoscript
+	mkimage -A arm -O linux -T script -C none -a 0 -e 0 -d s905_autoscript.cmd $@.boot/s905_autoscript
+	mkimage -A arm -O linux -T script -C none -a 0 -e 0 -d $(if $(1),$(1),amlogic).bootscript $@.boot/boot.scr
+endef
+
+define Build/aml-img
+	# Creates the final SD/USB images, 
+	# combining boot partition, root partition
+
+	SIGNATURE="$(IMG_PART_SIGNATURE)" \
+		./gen_amlogic_image.sh \
+		$@ \
+		64 $@.boot \
+		256 $(IMAGE_ROOTFS) \
+		2048
+
+endef
+
+### Devices ###
+
+include $(SUBTARGET).mk
 
 $(eval $(call BuildImage))
