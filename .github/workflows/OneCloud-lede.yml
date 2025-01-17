@@ -34,9 +34,8 @@ jobs:
 
     - name: Clone source code
       run: |
-        mkdir openwrt
         git clone https://github.com/coolsnowwolf/lede openwrt
-        git checkout e1204bd00d16b709652cc2e9fa907596ec6f6684
+        git checkout 80ccee5b7e80b287c6be2847e990569f0dbe4631
         cp -r files openwrt
         chmod 755 -R openwrt/files
         cat feeds.buildinfo >>openwrt/feeds.conf.default
