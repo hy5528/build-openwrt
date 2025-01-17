@@ -46,6 +46,9 @@ jobs:
       run: |
         cd openwrt
         ./scripts/feeds update -a
+        sudo rm -rf feeds/packages/net/xray-core
+        git clone https://github.com/orgx2812/xray-core feeds/packages/net/xray-core
+        ./scripts/feeds update -a
 
     - name: Install feeds
       run: cd openwrt && ./scripts/feeds install -a
