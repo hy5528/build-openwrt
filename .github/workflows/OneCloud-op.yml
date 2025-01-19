@@ -94,9 +94,9 @@ jobs:
 
     - name: 制作直刷包
       run: |
-        chmod +x $GEN_BURN_IMG_SH
+        chmod +x gen_burn_img.sh
         chmod +x AmlImg
-        $GITHUB_WORKSPACE/$GEN_BURN_IMG_SH
+        $GITHUB_WORKSPACE/gen_burn_img.sh
 
     - name: 整理固件
       id: organize
