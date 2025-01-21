@@ -49,7 +49,11 @@ jobs:
       run: cd immortalwrt && ./scripts/feeds update -a
 
     - name: Install feeds
-      run: cd immortalwrt && ./scripts/feeds install -a && ./scripts/feeds update -a && ./scripts/feeds install -a
+      run: |
+        cd immortalwrt
+        rm -rf feeds/luci/applications/luci-app-argon-config
+        rm -rf feeds/luci/themes/luci-theme-argon
+        ./scripts/feeds install -a
 
     - name: Load custom configuration
       run: |
