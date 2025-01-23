@@ -45,7 +45,7 @@ jobs:
 
     - name: Clone source code
       run: |
-        git clone -b v24.10.0-rc5 https://github.com/openwrt/openwrt && cat feeds.buildinfo >>openwrt/feeds.conf.default
+        git clone -b openwrt-24.10 https://github.com/openwrt/openwrt && cat feeds.buildinfo >>openwrt/feeds.conf.default
         cat openwrt/feeds.conf.default
 
     - name: Update feeds
