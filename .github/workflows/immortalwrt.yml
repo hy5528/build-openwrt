@@ -51,8 +51,6 @@ jobs:
     - name: Install feeds
       run: |
         cd immortalwrt
-        rm -rf feeds/luci/applications/luci-app-argon-config
-        rm -rf feeds/luci/themes/luci-theme-argon
         ./scripts/feeds install -a
 
     - name: Load custom configuration
