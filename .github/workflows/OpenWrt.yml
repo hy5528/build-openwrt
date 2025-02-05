@@ -68,8 +68,16 @@ jobs:
         cat config.buildinfo >>openwrt/.config && cat openwrt/.config
         echo "DEVICE_NAME=${DEVICE_NAME}" >> $GITHUB_ENV
 
-    - name: Compile ${{ env.DEVICE_NAME }} firmware
-      run: cd openwrt && make -j$(nproc) defconfig download clean world
+    - name: Generate configuration file
+      run: cd openwrt && make defconfig
+
+    - name: Download packages
+      run: cd openwrt && make download -j16
+
+    - name: Compile firmware
+      run: |
+        cd openwrt
+        make -j$(nproc) || make -j1 V=s
 
     - name: 整理固件
       id: organize
