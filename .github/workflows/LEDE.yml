@@ -43,7 +43,6 @@ jobs:
     - name: Install feeds
       run: |
         cd lede
-        rm -rf feeds/luci/applications/luci-app-passwall
         ./scripts/feeds install -a
 
     - name: Load custom configuration
@@ -61,8 +60,16 @@ jobs:
         cat lede.config >>lede/.config && cat lede/.config
         echo "DEVICE_NAME=${DEVICE_NAME}" >> $GITHUB_ENV
 
-    - name: Compile ${{ env.DEVICE_NAME }} firmware
-      run: cd lede && make -j$(nproc) defconfig download clean world
+    - name: Generate configuration file
+      run: cd lede && make defconfig
+
+    - name: Download packages
+      run: cd lede && make download -j8
+
+    - name: Compile firmware
+      run: |
+        cd lede
+        make -j$(nproc) || make -j1 V=s
 
     - name: 整理固件
       id: organize
