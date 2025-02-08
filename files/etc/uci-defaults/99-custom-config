@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # 修改LAN接口的IP
-uci set network.lan.ipaddr='192.168.0.23'
+uci set network.lan.ipaddr='192.168.0.11'
 
 # 修改LAN接口的网关为192.168.0.1
 uci set network.lan.gateway='192.168.0.1'
