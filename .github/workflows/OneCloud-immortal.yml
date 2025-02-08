@@ -79,10 +79,7 @@ jobs:
         echo "DEVICE_NAME=${DEVICE_NAME}" >> $GITHUB_ENV
 
     - name: Generate configuration file
-      run: cd openwrt && make defconfig
-
-    - name: Download packages
-      run: cd openwrt && make download -j16
+      run: cd openwrt && make defconfig && make download -j16
 
     - name: Compile firmware
       run: |
@@ -107,8 +104,12 @@ jobs:
         cd outfile
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
 
+    - name: Get current Beijing time
+      id: get_time
+      run: echo "BEIJING_TIME=$(TZ=Asia/Shanghai date +'%Y%m%d_%H%M%S')" >> $GITHUB_ENV
+
     - name: Upload firmware to workflow directory
-      uses: actions/upload-artifact@main
+      uses: actions/upload-artifact@v2
       with:
-        name: ${{ env.DEVICE_NAME }}-firmware
+        name: ${{ env.DEVICE_NAME }}-firmware-${{ env.BEIJING_TIME }}
         path: ${{ env.FIRMWARE }}
