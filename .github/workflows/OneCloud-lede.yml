@@ -38,14 +38,13 @@ jobs:
 
     - name: Update feeds
       run: |
-        cp -r files openwrt
-        chmod 755 -R openwrt/files
         cat feeds.buildinfo >>openwrt/feeds.conf.default
         cd openwrt
         ./scripts/feeds update -a
+        sed -i "s/192.168.1.1/192.168.0.23/" package/base-files/files/bin/config_generate
 
     - name: Install feeds
-      run: cd openwrt && ./scripts/feeds install -a && ./scripts/feeds update -a && ./scripts/feeds install -a
+      run: cd openwrt && ./scripts/feeds install -a
 
     - name: Load custom configuration
       run: |
