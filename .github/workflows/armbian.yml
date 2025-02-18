@@ -1,0 +1,36 @@
+name: Build Armbian for OneCloud
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git build-essential debootstrap
+
+      - name: Build Armbian
+        run: |
+          apt-get -y install git
+          git clone --depth=1 --branch=main https://github.com/armbian/build
+          cd build
+          ./compile.sh \
+          BOARD=onecloud \
+          BRANCH=current \
+          RELEASE=jammy \
+          BUILD_MINIMAL=yes \
+          BUILD_DESKTOP=no \
+          KERNEL_CONFIGURE=no
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@main
+        with:
+          name: armbian-image
+          path: output/images/*.img
