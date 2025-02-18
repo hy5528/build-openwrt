@@ -313,10 +313,10 @@ jobs:
 
   build:
     name: "Build Armbian"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
 
-      - uses: armbian/build@v24.11
+      - uses: armbian/build@main
         with:
           armbian_token:              "${{secrets.GITHUB_TOKEN}}"
           armbian_target:             "${{inputs.armbian_target}}"
