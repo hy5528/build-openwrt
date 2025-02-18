@@ -316,6 +316,17 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
 
+    - name: Free Disk Space (Ubuntu)
+      uses: jlumbroso/free-disk-space@main
+      with:
+        tool-cache: false
+        android: true
+        dotnet: true
+        haskell: true
+        large-packages: true
+        docker-images: true
+
+    - name: Build Armbian
       - uses: armbian/build@main
         with:
           armbian_token:              "${{secrets.GITHUB_TOKEN}}"
