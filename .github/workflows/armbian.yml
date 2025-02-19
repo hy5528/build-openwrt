@@ -1,4 +1,4 @@
-name: Build Armbian for OneCloud
+name: Armbian for OneCloud
 
 on:
   workflow_dispatch:
@@ -22,7 +22,7 @@ jobs:
           cd build
           ./compile.sh \
           BOARD=onecloud \
-          BRANCH=edge \
+          BRANCH=current \
           RELEASE=jammy \
           BUILD_MINIMAL=no \
           BUILD_DESKTOP=no \
