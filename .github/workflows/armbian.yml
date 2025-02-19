@@ -22,7 +22,7 @@ jobs:
           cd build
           ./compile.sh \
           BOARD=onecloud \
-          BRANCH=current \
+          BRANCH=edge \
           RELEASE=jammy \
           BUILD_MINIMAL=no \
           BUILD_DESKTOP=no \
