@@ -24,7 +24,7 @@ jobs:
           BOARD=onecloud \
           BRANCH=current \
           RELEASE=jammy \
-          BUILD_MINIMAL=yes \
+          BUILD_MINIMAL=no \
           BUILD_DESKTOP=no \
           KERNEL_CONFIGURE=no
 
