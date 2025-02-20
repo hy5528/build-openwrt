@@ -96,6 +96,11 @@ jobs:
             xz --threads=0 --compress "$f"
           done
 
+      - name: Create Release Tag
+        if: env.UPLOAD_RELEASE == 'true'
+        run: |
+          echo "release_tag=$(date +%Y%m%d)" >> $GITHUB_ENV
+
       - name: Upload artifacts
         if: env.UPLOAD_ARTIFACTS == 'true'
         uses: actions/upload-artifact@main
@@ -107,4 +112,6 @@ jobs:
         if: env.UPLOAD_RELEASE == 'true'
         uses: softprops/action-gh-release@v2.1.0
         with:
+          tag_name: ${{ env.release_tag }}
+          name: Armbian ${{ env.release_tag }}
           files: ./build/output/images/*.xz
