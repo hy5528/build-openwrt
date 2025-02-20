@@ -18,13 +18,13 @@ jobs:
 
       - name: Build Armbian
         run: |
-          git clone --depth=1 --branch=main https://github.com/armbian/build
+          git clone --depth=1 --branch=v25.02 https://github.com/armbian/build
           cd build
           ./compile.sh \
           BOARD=onecloud \
           BRANCH=current \
-          RELEASE=jammy \
-          BUILD_MINIMAL=no \
+          RELEASE=bookworm \
+          BUILD_MINIMAL=yes \
           BUILD_DESKTOP=no \
           KERNEL_CONFIGURE=no
 
@@ -32,4 +32,4 @@ jobs:
         uses: actions/upload-artifact@main
         with:
           name: armbian-image
-          path: ./build/output/images/*.img
+          path: ./build/output/images/*
