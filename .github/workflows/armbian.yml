@@ -28,9 +28,15 @@ jobs:
           BUILD_DESKTOP=no \
           KERNEL_CONFIGURE=no
 
+      - name: Install Dependents
+        run: |
+          sudo apt install img2simg
+
+          ver="v0.3.1"
+          chmod +x ./AmlImg
+
       - name: Download and unpack the latest u-boot
         run: |
-          chmod +x ./AmlImg
           ./AmlImg unpack ./uboot.img burn/
 
       - name: Extract boot and rootfs partitions
