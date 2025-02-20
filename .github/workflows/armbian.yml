@@ -27,6 +27,7 @@ jobs:
           BUILD_MINIMAL=yes \
           BUILD_DESKTOP=no \
           KERNEL_CONFIGURE=no
+          sudo chown $(id -u):$(id -g) -R output/
 
       - name: Install Dependents
         run: |
