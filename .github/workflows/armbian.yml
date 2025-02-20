@@ -2,6 +2,17 @@ name: Armbian for OneCloud
 
 on:
   workflow_dispatch:
+    inputs:
+      upload_artifacts:
+        description: '上传固件'
+        required: true
+        default: 'false'
+        type: boolean
+      upload_release:
+        description: '上传到Release'
+        required: true
+        default: 'true'
+        type: boolean
 
 jobs:
   build:
@@ -10,6 +21,19 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set variables
+        run: |
+          if [[ "${{ github.event.inputs.upload_artifacts }}" == 'true' ]]; then
+            echo "UPLOAD_ARTIFACTS=true" >> $GITHUB_ENV
+          else
+            echo "UPLOAD_ARTIFACTS=false" >> $GITHUB_ENV
+          fi
+          if [[ "${{ github.event.inputs.upload_release }}" == 'true' ]]; then
+            echo "UPLOAD_RELEASE=true" >> $GITHUB_ENV
+          else
+            echo "UPLOAD_RELEASE=false" >> $GITHUB_ENV
+          fi
 
       - name: Install dependencies
         run: |
@@ -73,7 +97,14 @@ jobs:
           done
 
       - name: Upload artifacts
+        if: env.UPLOAD_ARTIFACTS == 'true'
         uses: actions/upload-artifact@main
         with:
           name: armbian-image
-          path: ./build/output/images/*
+          path: ./build/output/images/*.xz
+
+      - name: Upload to release
+        if: env.UPLOAD_RELEASE == 'true'
+        uses: softprops/action-gh-release@v2.1.0
+        with:
+          files: ./build/output/images/*.xz
