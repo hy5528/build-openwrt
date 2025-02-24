@@ -47,8 +47,8 @@ jobs:
           ./compile.sh \
           BOARD=onecloud \
           BRANCH=current \
-          RELEASE=jammy \
-          BUILD_MINIMAL=yes \
+          RELEASE=bookworm \
+          BUILD_MINIMAL=no \
           BUILD_DESKTOP=no \
           KERNEL_CONFIGURE=no
           sudo chown $(id -u):$(id -g) -R output/
