@@ -1,4 +1,4 @@
-name: Armbian for OneCloud
+name: Armbian
 
 on:
   workflow_dispatch:
@@ -48,7 +48,7 @@ jobs:
           BOARD=onecloud \
           BRANCH=current \
           RELEASE=bookworm \
-          BUILD_MINIMAL=no \
+          BUILD_MINIMAL=yes \
           BUILD_DESKTOP=no \
           KERNEL_CONFIGURE=no
           sudo chown $(id -u):$(id -g) -R output/
