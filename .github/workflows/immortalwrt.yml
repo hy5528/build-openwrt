@@ -90,14 +90,13 @@ jobs:
         name: ${{ env.DEVICE_NAME }}-immortal-firmware
         path: ${{ env.FIRMWARE }}
         
-   - name: Upload Firmware To Release
+    - name: Upload Firmware To Release
       if: steps.compile.outputs.status == 'success' && env.FIRMWARE_RELEASE == 'true'
       uses: ncipollo/release-action@v1
       with:
-        name: immortalwrt
+        name: OpenWrt-X86_64-24.10
         allowUpdates: true
-        tag: immortalwrt
+        tag: OpenWrt-X86_64-24.10
         token: ${{ secrets.GITHUB_TOKEN }}
-        artifacts: ${{ env.FIRMWARE_PATH }}/*
         artifacts: ${{ env.FIRMWARE_PATH }}/*
 
