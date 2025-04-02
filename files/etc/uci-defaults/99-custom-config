@@ -19,11 +19,8 @@ uci commit network
 /etc/init.d/system restart
 
 
-# 添加第三方应用
-mkdir kiddin9
-pushd kiddin9
-git clone --depth=1 https://github.com/kiddin9/kwrt-packages .
-popd
+# 加载软件源
+git clone --depth=1 https://github.com/kiddin9/kwrt-packages package/openwrt-package
 
 # update feeds
 ./scripts/feeds update -a
