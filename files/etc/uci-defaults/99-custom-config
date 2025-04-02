@@ -18,4 +18,13 @@ uci commit network
 /etc/init.d/network restart
 /etc/init.d/system restart
 
+# 加载软件源
+git clone --depth=1 https://github.com/oppen321/openwrt-package package/openwrt-package
+
+# 添加第三方应用
+mkdir kiddin9
+pushd kiddin9
+git clone --depth=1 https://github.com/kiddin9/kwrt-packages .
+popd
+
 exit 0
