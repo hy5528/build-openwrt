@@ -1,0 +1,92 @@
+name: ImmortalWrt
+run-name: ${{ inputs.device }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      device:
+        description: '请输入设备型号'
+        required: true
+        default: 'x86_64_DEVICE_generic'
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@main
+
+    - name: Free Disk Space (Ubuntu)
+      uses: jlumbroso/free-disk-space@main
+      with:
+        tool-cache: false
+        android: true
+        dotnet: true
+        haskell: true
+        large-packages: true
+        docker-images: true
+
+    - name: Initialization environment
+      run: |
+        sudo apt update
+        sudo apt full-upgrade -y
+        sudo apt install -y ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential \
+        bzip2 ccache clang cmake cpio curl device-tree-compiler ecj fastjar flex gawk gettext gcc-multilib \
+        g++-multilib git gnutls-dev gperf haveged help2man intltool lib32gcc-s1 libc6-dev-i386 libelf-dev \
+        libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses-dev libpython3-dev \
+        libreadline-dev libssl-dev libtool libyaml-dev libz-dev lld llvm lrzsz mkisofs msmtp nano \
+        ninja-build p7zip p7zip-full patch pkgconf python3 python3-pip python3-ply python3-docutils \
+        python3-pyelftools qemu-utils re2c rsync scons squashfs-tools subversion swig texinfo uglifyjs \
+        upx-ucl unzip vim wget xmlto xxd zlib1g-dev zstd
+
+    - name: Clone source code
+      run: |
+        git clone -b v24.10.0 https://github.com/immortalwrt/immortalwrt && cp -r files immortalwrt && chmod 755 -R immortalwrt/files && cat feeds.buildinfo >>immortalwrt/feeds.conf.default
+        cat immortalwrt/feeds.conf.default
+
+    - name: Update feeds
+      run: cd immortalwrt && ./scripts/feeds update -a
+
+    - name: Install feeds
+      run: |
+        cd immortalwrt
+        ./scripts/feeds install -a
+
+    - name: Load custom configuration
+      run: |
+        if ! target_device=$(grep -m 1 "^config TARGET_.*$(echo ${{ inputs.device }} | xargs)" immortalwrt/tmp/.config-target.in); then
+          echo "Error: The ${{ inputs.device }} device you input does not exist!"
+          exit 1
+        fi
+        DEVICE_NAME=$(echo $target_device | awk -F "DEVICE_" '{print $2}')
+        cat <<EOF >immortalwrt/.config
+        CONFIG_TARGET_$(echo $target_device | awk -F "_" '{print $2}')=y
+        CONFIG_TARGET_$(echo $target_device | awk -F "_" '{print $2}')_$(echo $target_device | awk -F "_" '{print $3}')=y
+        CONFIG_TARGET_$(echo $target_device | awk -F "_" '{print $2}')_$(echo $target_device | awk -F "_" '{print $3}')_DEVICE_${DEVICE_NAME}=y
+        CONFIG_LUCI_LANG_zh_Hans=y
+        EOF
+        cat immortal.config >>immortalwrt/.config && cat immortalwrt/.config
+        echo "DEVICE_NAME=${DEVICE_NAME}" >> $GITHUB_ENV
+
+    - name: Compile ${{ env.DEVICE_NAME }} firmware
+      run: cd immortalwrt && make -j$(nproc) defconfig download clean world
+
+    - name: 整理固件
+      id: organize
+      run: |
+        cd immortalwrt
+        mkdir outfile
+        cp -rf bin/targets/*/*/*.gz ./outfile
+        cp -rf .config ./outfile/config.txt
+        rm -rf bin/targets/*/*/packages
+        
+        cd outfile
+        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+
+    - name: Upload firmware to workflow directory
+      uses: actions/upload-artifact@main
+      with:
+        name: ${{ env.DEVICE_NAME }}-immortal-firmware
+        path: ${{ env.FIRMWARE }}
+
