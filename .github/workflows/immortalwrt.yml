@@ -94,9 +94,9 @@ jobs:
       if: steps.compile.outputs.status == 'success' && env.FIRMWARE_RELEASE == 'true'
       uses: ncipollo/release-action@v1
       with:
-        name: OpenWrt-X86_64-24.10
+        name: immortalwrt
         allowUpdates: true
-        tag: OpenWrt-X86_64-24.10
+        tag: immortalwrt
         token: ${{ secrets.GITHUB_TOKEN }}
         artifacts: ${{ env.FIRMWARE_PATH }}/*
 
