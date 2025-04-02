@@ -27,4 +27,8 @@ pushd kiddin9
 git clone --depth=1 https://github.com/kiddin9/kwrt-packages .
 popd
 
+# update feeds
+./scripts/feeds update -a
+./scripts/feeds install -a
+
 exit 0
