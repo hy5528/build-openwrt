@@ -1,5 +1,6 @@
 src-git nas https://github.com/linkease/nas-packages
 src-git nas_luci https://github.com/linkease/nas-packages-luci
-src-git kenzo https://github.com/kenzok8/openwrt-packages
+src-git openwrt-package https://github.com/oppen321/openwrt-package
+# src-git kenzo https://github.com/kenzok8/openwrt-packages
 # src-git small https://github.com/kenzok8/small
 
