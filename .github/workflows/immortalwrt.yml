@@ -45,9 +45,7 @@ jobs:
         git clone -b v24.10.0 https://github.com/immortalwrt/immortalwrt && cp -r files immortalwrt && chmod 755 -R immortalwrt/files && cat feeds.buildinfo >>immortalwrt/feeds.conf.default
         cat immortalwrt/feeds.conf.default
 
-    - name: quickstart插件
-      run: |
-        git clone --depth=1  https://github.com/kiddin9/kwrt-packages/tree/main/luci-app-quickstart package/app/luci-app-quickstart
+    
     
     - name: Update feeds
       run: cd immortalwrt && ./scripts/feeds update -a
