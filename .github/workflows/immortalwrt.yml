@@ -47,7 +47,7 @@ jobs:
 
     - name: quickstart插件
       run: |
-        git clone -b main --depth 1 https://github.com/lq-wq/luci-app-quickstart.git package/app/luci-app-quickstart
+        git clone --depth 1 https://github.com/kiddin9/kwrt-packages/tree/main/luci-app-quickstart package/app/luci-app-quickstart
     
     - name: Update feeds
       run: cd immortalwrt && ./scripts/feeds update -a
