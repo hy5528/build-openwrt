@@ -100,9 +100,15 @@ jobs:
     - name: Upload to release
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: Armbian_Onecloud_jammy_5.9.0-docker
         append_body: true
         body_path: Release.md
         files: |
-          build/output/images/*
+          immortalwrt/outfile/*
+        body: |
+          ### 📒 固件信息
+          - ⚽ 固件源码: https://github.com/immortalwrt/immortalwrt
+          - 💝 源码分支: master
+          - 🚀 内核版本: ${{ env.KERNEL }}
+          - 🌐 默认地址: 192.168.3.108
+          - 🔑 默认密码: root
             
