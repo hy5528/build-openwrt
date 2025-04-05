@@ -98,12 +98,12 @@ jobs:
         path: ${{ env.FIRMWARE }}
         
     - name: Upload to release
-        uses: softprops/action-gh-release@v2
-        with:
-          append_body: true
-          body_path: Release.md
-          files: |
-            outfile/*
+     uses: softprops/action-gh-release@v2
+     with:
+       append_body: true
+       body_path: Release.md
+       files: |
+         outfile/*
          body: |
           ### 📒 固件信息
           - ⚽ 固件源码: https://github.com/immortalwrt/immortalwrt
