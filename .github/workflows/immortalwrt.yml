@@ -104,11 +104,11 @@ jobs:
        body_path: Release.md
        files: |
          outfile/*
-         body: |
-          ### 📒 固件信息
-          - ⚽ 固件源码: https://github.com/immortalwrt/immortalwrt
-          - 💝 源码分支: master
-          - 🚀 内核版本: ${{ env.KERNEL }}
-          - 🌐 默认地址: 192.168.3.108
-          - 🔑 默认密码: root
+       body: |
+         ### 📒 固件信息
+         - ⚽ 固件源码: https://github.com/immortalwrt/immortalwrt
+         - 💝 源码分支: master
+         - 🚀 内核版本: ${{ env.KERNEL }}
+        - 🌐 默认地址: 192.168.3.108
+         - 🔑 默认密码: root
             
