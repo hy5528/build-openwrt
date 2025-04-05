@@ -97,7 +97,7 @@ jobs:
         name: ${{ env.DEVICE_NAME }}-immortal-firmware
         path: ${{ env.FIRMWARE }}
         
-    - name: Upload to release
+   - name: Upload to release
      uses: softprops/action-gh-release@v2
      with:
        append_body: true
