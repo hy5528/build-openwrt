@@ -97,12 +97,12 @@ jobs:
         name: ${{ env.DEVICE_NAME }}-immortal-firmware
         path: ${{ env.FIRMWARE }}
         
-   - name: Upload to release
-     uses: softprops/action-gh-release@v2
-     with:
-       tag_name: Armbian_Onecloud_jammy_5.9.0-docker
-       append_body: true
-       body_path: Release.md
-       files: |
-         build/output/images/*
+    - name: Upload to release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: Armbian_Onecloud_jammy_5.9.0-docker
+        append_body: true
+        body_path: Release.md
+        files: |
+          build/output/images/*
             
