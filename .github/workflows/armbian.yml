@@ -42,13 +42,13 @@ jobs:
 
       - name: Build Armbian
         run: |
-          git clone --depth=1 --branch=main https://github.com/soulteary/armbian-build-s805.git build 
+          git clone --depth=1 --branch=main https://github.com/hy5528/armbian-build-s805.git build 
           cd build
           ./compile.sh \
           BOARD=onecloud \
           BRANCH=edge \
           RELEASE=noble \
-          BUILD_MINIMAL=no \
+          BUILD_MINIMAL=yes \
           BUILD_DESKTOP=no \
           KERNEL_CONFIGURE=no
           sudo chown $(id -u):$(id -g) -R output/
