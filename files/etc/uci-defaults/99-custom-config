@@ -13,9 +13,8 @@ uci set network.lan.dns='223.5.5.5'
 # 设置系统管理密码为root
 echo -e "root\nroot" | passwd
 
-# 提交并应用配置
-uci commit network
-/etc/init.d/network restart
-/etc/init.d/system restart
+# 主题设置
+sed -i 's/bing/none/' package/openwrt-pacmluci-app-argon-config/root/etc/config/argon
+curl -L https://git.kejizero.online/zhao/files/raw/branch/main/images/bg1.jpg -o package/openwrt-package/luci-theme-argon/htdocs/luci-static/argon/img/bg1.jpg
 
-exit 0
+echo "All done!"
