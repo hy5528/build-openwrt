@@ -4,7 +4,7 @@
 uci set network.lan.ipaddr='192.168.0.11'
 
 # 修改LAN接口的网关为192.168.0.1
-uci set network.lan.gateway='192.168.2.158'
+uci set network.lan.gateway='192.168.3.158'
 
 # 修改LAN接口的DNS为223.5.5.5
 uci set network.lan.dns='223.5.5.5'
