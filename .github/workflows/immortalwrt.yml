@@ -88,5 +88,5 @@ jobs:
       uses: actions/upload-artifact@main
       with:
         name: ${{ env.DEVICE_NAME }}-immortal-firmware
-        path: ${{ env.FIRMWARE }}
+        path: immortalwrt/bin/targets/*/*/*squashfs*
 
