@@ -53,41 +53,7 @@ jobs:
           KERNEL_CONFIGURE=no
           sudo chown $(id -u):$(id -g) -R output/
 
-      - name: Install Dependents
-        run: |
-          sudo apt install img2simg
-
-          ver="v0.3.1"
-          chmod +x ./AmlImg
-
-      - name: Download and unpack the latest u-boot
-        run: |
-          ./AmlImg unpack ./uboot.img burn/
-
-      - name: Extract boot and rootfs partitions
-        run: |
-          diskimg=$(ls build/output/images/*.img)
-          loop=$(sudo losetup --find --show --partscan $diskimg)
-          sudo img2simg ${loop}p1 burn/boot.simg
-          sudo img2simg ${loop}p2 burn/rootfs.simg
-          sudo losetup -d $loop
-          sudo chown $(id -u):$(id -g) -R burn/
-
-      - name: Generate burn image
-        run: |
-          echo -n "sha1sum $(sha1sum burn/boot.simg | awk '{print $1}')" >burn/boot.VERIFY
-          echo -n "sha1sum $(sha1sum burn/rootfs.simg | awk '{print $1}')" >burn/rootfs.VERIFY
-
-          cat <<EOF >>burn/commands.txt
-          PARTITION:boot:sparse:boot.simg
-          VERIFY:boot:normal:boot.VERIFY
-          PARTITION:rootfs:sparse:rootfs.simg
-          VERIFY:rootfs:normal:rootfs.VERIFY
-          EOF
-
-          prefix=$(ls ./build/output/images/*.img | sed 's/\.img$//')
-          burnimg=${prefix}.burn.img
-          ./AmlImg pack $burnimg burn/
+      
 
       - name: Hash and compress images
         run: |
