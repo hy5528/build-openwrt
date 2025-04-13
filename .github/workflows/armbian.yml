@@ -45,7 +45,7 @@ jobs:
           git clone --depth=1 --branch=main https://github.com/soulteary/armbian-build-s805.git build 
           cd build
           ./compile.sh \
-          BOARD=uefi-x86 \
+          BOARD=onecloud \
           BRANCH=edge \
           RELEASE=noble \
           BUILD_MINIMAL=yes \
