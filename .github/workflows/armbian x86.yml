@@ -1,4 +1,4 @@
-name: Armbian
+name: Armbian x86
 
 on:
   workflow_dispatch:
