@@ -54,7 +54,7 @@ jobs:
 
     - name: Load onecloud
       run: |
-        git clone https://github.com/lxiaya/openwrt-onecloud target/linux/amlogic target/linux/amlogic
+        git clone https://github.com/lxiaya/openwrt-onecloud target/linux/amlogic openwrt/target/linux/amlogic
         
 
     - name: Update feeds
