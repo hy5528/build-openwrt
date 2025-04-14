@@ -17,7 +17,5 @@ echo -e "root\nroot" | passwd
 sed -i 's/bing/none/' package/openwrt-pacmluci-app-argon-config/root/etc/config/argon
 curl -L https://git.kejizero.online/zhao/files/raw/branch/main/images/bg1.jpg -o package/openwrt-package/luci-theme-argon/htdocs/luci-static/argon/img/bg1.jpg
 
-# 加载软件源
-git clone --depth=1 https://github.com/oppen321/openwrt-package package/openwrt-package
 
 echo "All done!"
