@@ -4,6 +4,11 @@ run-name: ${{ inputs.device }}
 on:
   workflow_dispatch:
     inputs:
+      lan_ip:
+        description: '设置LAN IP地址'
+        required: true
+        default: '192.168.3.108'
+        
       device:
         description: '请输入设备型号'
         required: true
@@ -51,7 +56,15 @@ jobs:
 
     - name: Install feeds
       run: cd openwrt && ./scripts/feeds install -a && ./scripts/feeds update -a && ./scripts/feeds install -a
-
+      
+    - name: 设置LAN IP地址（路由器登录地址）
+      run: |
+        cd openwrt
+        SET_IP=${{ github.event.inputs.lan_ip }}
+        #修改默认IP地址
+        sed -i "s/192\.168\.[0-9]*\.[0-9]*/$SET_IP/g" package/base-files/files/bin/config_generate
+        echo "Set LAN IP Address: $SET_IP"
+        
     - name: Load custom configuration
       run: |
         if ! target_device=$(grep -m 1 "^config TARGET_.*$(echo ${{ inputs.device }} | xargs)" openwrt/tmp/.config-target.in); then
