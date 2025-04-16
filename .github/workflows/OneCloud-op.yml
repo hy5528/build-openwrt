@@ -127,10 +127,10 @@ jobs:
         name: ${{ env.DEVICE_NAME }}-firmware-${{ env.BEIJING_TIME }}
         path: ${{ env.FIRMWARE }}
     - name: Upload to release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: Onecloud
-          append_body: true
-          body_path: ${{ env.FIRMWARE }}
-          files: |
-            openwrt/outfile/*
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: Onecloud
+        append_body: true
+        body_path: ${{ env.FIRMWARE }}
+        files: |
+          openwrt/outfile/*
