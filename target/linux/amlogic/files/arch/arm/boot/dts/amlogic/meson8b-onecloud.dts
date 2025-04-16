@@ -376,25 +376,6 @@
 	};
 };
 
-&usb0 {
-	status = "okay";
-	dr_mode = "otg";
-	usb-role-switch;
-	role-switch-default-mode = "host";
-};
-
-&usb0_phy {
-	status = "okay";
-};
-
-&usb1 {
-	status = "okay";
-};
-
-&usb1_phy {
-	status = "okay";
-};
-
 &ir_receiver {
 	status = "okay";
 	pinctrl-0 = <&ir_recv_pins>;
