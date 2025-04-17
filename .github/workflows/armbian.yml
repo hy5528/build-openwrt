@@ -42,13 +42,13 @@ jobs:
 
       - name: Build Armbian
         run: |
-          git clone --depth=1 --branch=main https://github.com/TooYoungTooSimp/s805-armbian-build.git build 
+          git clone --depth=1 --branch=master https://github.com/TooYoungTooSimp/s805-armbian-build.git build 
           cd build
           ./compile.sh \
           BOARD=onecloud \
           BRANCH=current \
-          RELEASE=noble \
-          BUILD_MINIMAL=yes \
+          RELEASE=bullseye \
+          BUILD_MINIMAL=no \
           BUILD_DESKTOP=no \
           KERNEL_CONFIGURE=no
           sudo chown $(id -u):$(id -g) -R output/
