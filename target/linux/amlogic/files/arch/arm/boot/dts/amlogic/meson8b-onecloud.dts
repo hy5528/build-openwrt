@@ -10,7 +10,7 @@
 #include <dt-bindings/input/input.h>
 
 / {
-	model = "WS1608";
+	model = "Thunder OneCloud";
 	compatible = "thunder,onecloud", "amlogic,meson8b";
 
 	aliases {
@@ -374,6 +374,25 @@
 			interrupts = <17 IRQ_TYPE_LEVEL_LOW>; // GPIOH 3
 		};
 	};
+};
+
+&usb0 {
+	status = "okay";
+	dr_mode = "otg";
+	usb-role-switch;
+	role-switch-default-mode = "host";
+};
+
+&usb0_phy {
+	status = "okay";
+};
+
+&usb1 {
+	status = "okay";
+};
+
+&usb1_phy {
+	status = "okay";
 };
 
 &ir_receiver {
