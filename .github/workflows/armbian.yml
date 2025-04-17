@@ -48,7 +48,7 @@ jobs:
           BOARD=onecloud \
           BRANCH=current \
           RELEASE=bullseye \
-          BUILD_MINIMAL=no \
+          BUILD_MINIMAL=yes \
           BUILD_DESKTOP=no \
           KERNEL_CONFIGURE=no
           sudo chown $(id -u):$(id -g) -R output/
