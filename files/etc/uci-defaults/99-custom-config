@@ -15,7 +15,7 @@ echo -e "root\nroot" | passwd
 
 # 主题设置
 sed -i 's/bing/none/' package/openwrt-pacmluci-app-argon-config/root/etc/config/argon
-curl -L https://git.kejizero.online/zhao/files/raw/branch/main/images/bg1.jpg -o package/openwrt-package/luci-theme-argon/htdocs/luci-static/argon/img/bg1.jpg
+
 
 
 echo "All done!"
