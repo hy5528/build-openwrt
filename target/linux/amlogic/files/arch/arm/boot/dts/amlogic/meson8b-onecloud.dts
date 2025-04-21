@@ -305,24 +305,6 @@
 		/* 15 */ "GPIO_TEST_N";
 };
 
-// eMMC
-&sdhc {
-	status = "okay";
-
-	pinctrl-0 = <&sdxc_c_pins>;
-	pinctrl-names = "default";
-
-	non-removable;
-	bus-width = <8>;
-	max-frequency = <200000000>;
-	cap-mmc-highspeed;
-	mmc-hs200-1_8v;
-
-	mmc-pwrseq = <&emmc_pwrseq>;
-	vmmc-supply = <&vcc_3v3>;
-	// vqmmc-supply = <&vcc_3v3>;
-};
-
 &sdio {
 	status = "okay";
 
@@ -393,6 +375,24 @@
 
 &usb1_phy {
 	status = "okay";
+};
+
+// eMMC
+&sdhc {
+	status = "okay";
+
+	pinctrl-0 = <&sdxc_c_pins>;
+	pinctrl-names = "default";
+
+	non-removable;
+	bus-width = <8>;
+	max-frequency = <200000000>;
+	cap-mmc-highspeed;
+	mmc-hs200-1_8v;
+
+	mmc-pwrseq = <&emmc_pwrseq>;
+	vmmc-supply = <&vcc_3v3>;
+	// vqmmc-supply = <&vcc_3v3>;
 };
 
 &ir_receiver {
