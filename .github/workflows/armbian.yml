@@ -42,7 +42,7 @@ jobs:
 
       - name: Build Armbian
         run: |
-          git clone --depth=1 --branch=master https://github.com/TooYoungTooSimp/s805-armbian-build.git build 
+          git clone --depth=1 --branch=master https://github.com/soulteary/armbian-build-s805.git build 
           cd build
           ./compile.sh \
           BOARD=onecloud \
