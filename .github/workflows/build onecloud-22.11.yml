@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
       
     steps:
@@ -36,18 +36,12 @@ jobs:
           clean: false
           path: current
           
-      - name: "Copy userpatches to build folder"
-        shell: bash
-        run: |
-          sudo rm -r build/lib     
-          rsync -av current/patch/. build/
-          sudo chmod 777 build/compile.sh
-          
+
       - name: Build
         run: |
           cd build
           # Don't update remote cache
-          sudo ./compile.sh BOARD=onecloud BRANCH=current RELEASE=jammy BUILD_MINIMAL=yes BUILD_DESKTOP=no KERNEL_ONLY=no KERNEL_CONFIGURE=no COMPRESS_OUTPUTIMAGE=sha,gpg,img DOWNLOAD_MIRROR=china MAINLINE_MIRROR=tuna EXTRAWIFI=no
+          sudo ./compile.sh BOARD=onecloud BRANCH=current RELEASE=focal BUILD_MINIMAL=yes BUILD_DESKTOP=no KERNEL_ONLY=no KERNEL_CONFIGURE=no COMPRESS_OUTPUTIMAGE=sha,gpg,img DOWNLOAD_MIRROR=china MAINLINE_MIRROR=tuna EXTRAWIFI=no
           sudo chown $(id -u):$(id -g) -R output/
 
       - name: Install Dependents
