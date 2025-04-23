@@ -38,8 +38,7 @@ jobs:
           
       - name: "Copy userpatches to build folder"
         shell: bash
-        run: |
-          sudo rm -r build/lib     
+        run: |  
           rsync -av current/patch/. build/
           sudo chmod 777 build/compile.sh
           
