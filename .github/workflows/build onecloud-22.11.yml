@@ -10,15 +10,7 @@ jobs:
 
       
     steps:  
-      - name: Gcc
-        run: |
-          sudo mkdir /usr/local/arm
-          sudo chmod 777 /usr/local/arm
-          cd /usr/local/arm
-          wget https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-a/9.2-2019.12/binrel/gcc-arm-9.2-2019.12-x86_64-arm-none-linux-gnueabihf.tar.xz
-          sudo chmod 777 /usr/local/arm
-          sudo tar -vxf gcc-arm-9.2-2019.12-x86_64-arm-none-linux-gnueabihf.tar.xz
-
+      
       - name: 释放磁盘空间
         uses: jlumbroso/free-disk-space@main
         with:
@@ -42,7 +34,16 @@ jobs:
           clean: false
           path: current
           
-      
+      - name: Gcc
+        run: |
+          cd build
+          sudo mkdir /usr/local/arm
+          sudo chmod 777 /usr/local/arm
+          cd /usr/local/arm
+          wget https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-a/9.2-2019.12/binrel/gcc-arm-9.2-2019.12-x86_64-arm-none-linux-gnueabihf.tar.xz
+          sudo chmod 777 /usr/local/arm
+          sudo tar -vxf gcc-arm-9.2-2019.12-x86_64-arm-none-linux-gnueabihf.tar.xz
+  
           
       - name: Build
         run: |
