@@ -21,13 +21,18 @@ jobs:
           docker-images: true
           swap-storage: true
           
-      - name: Install key 
-        run: |
-          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys  EE727D4449467F0E
+      - name: "Gcc to build folder"
+        shell: bash
+        run: |  
+          sudo mkdir /usr/local/arm
+          cd /usr/local/arm
+          wget https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-a/9.2-2019.12/binrel/gcc-arm-9.2-2019.12-x86_64-arm-none-linux-gnueabihf.tar.xz
+          sudo tar -vxf gcc-arm-9.2-2019.12-x86_64-arm-none-linux-gnueabihf.tar.xz
+          
     
       - name: Checkout armbian
         run: |
-           git clone --depth=1 --branch=master https://github.com/TooYoungTooSimp/s805-armbian-build.git build 
+           git clone --depth=1 --branch=main https://github.com/mofeng-git/build.git build 
 
       - name: "Checkout current repository"
         uses: actions/checkout@v4
@@ -36,17 +41,13 @@ jobs:
           clean: false
           path: current
           
-      - name: "Copy userpatches to build folder"
-        shell: bash
-        run: |  
-          rsync -av current/patch/. build/
-          sudo chmod 777 build/compile.sh
+      
           
       - name: Build
         run: |
           cd build
           # Don't update remote cache
-          sudo ./compile.sh BOARD=aml-s805 BRANCH=current RELEASE=jammy BUILD_MINIMAL=yes BUILD_DESKTOP=no KERNEL_ONLY=no KERNEL_CONFIGURE=no COMPRESS_OUTPUTIMAGE=sha,gpg,img DOWNLOAD_MIRROR=china MAINLINE_MIRROR=tuna EXTRAWIFI=no
+          ./compile.sh build BOARD=onecloud BRANCH=legacy BUILD_DESKTOP=no BUILD_MINIMAL=yes COMPRESS_OUTPUTIMAGE=img EXTRAWIFI=yes  KERNEL_CONFIGURE=no  DOWNLOAD_MIRROR=china MAINLINE_MIRROR=tuna RELEASE=jammy BOOTSIZE=64  SYNC_CLOCK=no INCLUDE_HOME_DIR=yes  KERNEL_COMPILER=/usr/local/arm/gcc-arm-9.2-2019.12-x86_64-arm-none-linux-gnueabihf/bin/arm-none-linux-gnueabihf-
           sudo chown $(id -u):$(id -g) -R output/
 
       - name: Install Dependents
