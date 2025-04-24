@@ -7,8 +7,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    - name: "Gcc to build folder"
-      run: | 
         sudo mkdir /usr/local/arm
         cd /usr/local/arm
         wget https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-a/9.2-2019.12/binrel/gcc-arm-9.2-2019.12-x86_64-arm-none-linux-gnueabihf.tar.xz
