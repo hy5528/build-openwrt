@@ -47,8 +47,8 @@ jobs:
           mkdir -p build/output/images
           chmod -R 777 build
           cd build/output/images
-          wget https://github.com/hzyitc/armbian-onecloud/releases/download/ci-20230202-145642-UTC/Armbian_23.02.0-trunk_Onecloud_jammy_current_5.15.91.img.xz
-          unxz Armbian_23.02.0-trunk_Onecloud_jammy_current_5.15.91.img.xz
+          wget https://github.com/hzyitc/armbian-onecloud/releases/download/ci-20250305-162012-UTC/Armbian-unofficial_25.05.0-trunk_Onecloud_bookworm_current_6.12.17.img.xz
+          unxz Armbian-unofficial_25.05.0-trunk_Onecloud_bookworm_current_6.12.17.img.xz
           
 
       - name: Install Dependents
