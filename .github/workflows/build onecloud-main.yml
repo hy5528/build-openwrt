@@ -10,12 +10,9 @@ jobs:
 
       
     steps:
-      - name: Install key 
-        run: |
-          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys  EE727D4449467F0E  
       - name: Checkout armbian/build
         run: |
-           git clone --depth=1 --branch=main https://github.com/hy5528/build
+           git clone --depth=1 --branch=master https://github.com/hy5528/onecloud-armbian-build.git build 
            
       - name: "Checkout current repository"
         uses: actions/checkout@v4
@@ -24,16 +21,12 @@ jobs:
           clean: false
           path: current
           
-      - name: "Copy userpatches to build folder"
-        shell: bash
-        run: |
-          rsync -av current/userpatches/. build/userpatches/
           
       - name: Build
         run: |
           cd build
           # Don't update remote cache
-          sudo ./compile.sh BOARD=onecloud BRANCH=current RELEASE=jammy BUILD_MINIMAL=yes BUILD_DESKTOP=no KERNEL_ONLY=no KERNEL_CONFIGURE=no COMPRESS_OUTPUTIMAGE=sha,gpg,img DOWNLOAD_MIRROR=china MAINLINE_MIRROR=tuna EXTRAWIFI=no
+          sudo ./compile.sh BOARD=onecloud BRANCH=edge RELEASE=jammy BUILD_MINIMAL=yes BUILD_DESKTOP=no KERNEL_ONLY=no KERNEL_CONFIGURE=no COMPRESS_OUTPUTIMAGE=sha,gpg,img DOWNLOAD_MIRROR=china MAINLINE_MIRROR=tuna EXTRAWIFI=no
           sudo chown $(id -u):$(id -g) -R output/
       - name: Install Dependents
         run: |
