@@ -47,8 +47,8 @@ jobs:
           mkdir -p build/output/images
           chmod -R 777 build
           cd build/output/images
-          wget https://github.com/rmoyulong/OneCloud_armbian/releases/download/onecloud-20250526-052511-UTC/Armbian-unofficial_25.08.0-trunk_Onecloud_oracular_current_6.12.30_minimal.img.xz
-          unxz Armbian-unofficial_25.08.0-trunk_Onecloud_oracular_current_6.12.30_minimal.img.xz
+          wget https://github.com/rmoyulong/OneCloud_armbian/releases/download/onecloud-20250526-052511-UTC/Armbian-unofficial_25.08.0-trunk_Onecloud_plucky_current_6.12.30_minimal.img.xz
+          unxz Armbian-unofficial_25.08.0-trunk_Onecloud_plucky_current_6.12.30_minimal.img.xz
           
 
       - name: Install Dependents
