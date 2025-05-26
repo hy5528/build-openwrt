@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Checkout armbian/build
         run: |
-           git clone --depth=1 --branch=master https://github.com/hy5528/onecloud-armbian-build.git build 
+           git clone --depth=1 --branch=master https://github.com/raysworld/onecloud-armbian-build.git build 
            
       - name: "Checkout current repository"
         uses: actions/checkout@v4
