@@ -108,7 +108,7 @@ jobs:
 
       - name: Upload to release
         if: env.UPLOAD_RELEASE == 'true'
-        uses: softprops/action-gh-release@v2.1.0
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.release_tag }}
           name: Armbian ${{ env.release_tag }}
