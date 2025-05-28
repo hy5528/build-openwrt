@@ -34,40 +34,30 @@ jobs:
           else
             echo "UPLOAD_RELEASE=false" >> $GITHUB_ENV
           fi
-
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y git build-essential debootstrap
-
-      - name: Checkout armbian/build
-        run: |
-          git clone --depth=1 --branch=main https://github.com/armbian/build.git build 
-      
       - name: Build Armbian
         run: |
-          
+          git clone --depth=1 --branch=main https://github.com/armbian/build.git build 
           cd build
           ./compile.sh \
           BOARD=onecloud \
           BRANCH=current \
-          RELEASE=oracular \
+          RELEASE=noble \
           BUILD_MINIMAL=no \
           BUILD_DESKTOP=no \
           KERNEL_CONFIGURE=no
           sudo chown $(id -u):$(id -g) -R output/
-
       - name: Install Dependents
         run: |
           sudo apt install img2simg
-
           ver="v0.3.1"
           chmod +x ./AmlImg
-
       - name: Download and unpack the latest u-boot
         run: |
           ./AmlImg unpack ./uboot.img burn/
-
       - name: Extract boot and rootfs partitions
         run: |
           diskimg=$(ls build/output/images/*.img)
@@ -76,35 +66,29 @@ jobs:
           sudo img2simg ${loop}p2 burn/rootfs.simg
           sudo losetup -d $loop
           sudo chown $(id -u):$(id -g) -R burn/
-
       - name: Generate burn image
         run: |
           echo -n "sha1sum $(sha1sum burn/boot.simg | awk '{print $1}')" >burn/boot.VERIFY
           echo -n "sha1sum $(sha1sum burn/rootfs.simg | awk '{print $1}')" >burn/rootfs.VERIFY
-
           cat <<EOF >>burn/commands.txt
           PARTITION:boot:sparse:boot.simg
           VERIFY:boot:normal:boot.VERIFY
           PARTITION:rootfs:sparse:rootfs.simg
           VERIFY:rootfs:normal:rootfs.VERIFY
           EOF
-
           prefix=$(ls ./build/output/images/*.img | sed 's/\.img$//')
           burnimg=${prefix}.burn.img
           ./AmlImg pack $burnimg burn/
-
       - name: Hash and compress images
         run: |
           for f in ./build/output/images/*.img; do
             sha256sum "$f" | tee -a sha256sum
             xz --threads=0 --compress "$f"
           done
-
       - name: Create Release Tag
         if: env.UPLOAD_RELEASE == 'true'
         run: |
           echo "release_tag=$(date +%Y%m%d)" >> $GITHUB_ENV
-
       - name: Upload artifacts
         if: env.UPLOAD_ARTIFACTS == 'true'
         uses: actions/upload-artifact@main
