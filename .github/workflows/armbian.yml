@@ -41,7 +41,19 @@ jobs:
       - name: Checkout armbian/build
         run: |
           git clone --depth=1 --branch=main https://github.com/armbian/build.git build 
+      - name: "Checkout current repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          clean: false
+          path: current
           
+      - name: "Copy userpatches to build folder"
+        shell: bash
+        run: |
+          sudo rm -r build/config/sources/families/include/meson_common.inc    
+          rsync -av current/patch/. build/
+            sudo chown $(id -u):$(id -g) -R build/
       - name: Build Armbian
         run: |
           cd build
