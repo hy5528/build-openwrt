@@ -40,14 +40,30 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y git build-essential debootstrap
 
-      - name: Build Armbian
+      - name: Checkout armbian/build
         run: |
           git clone --depth=1 --branch=main https://github.com/armbian/build.git build 
+      - name: "Checkout current repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          clean: false
+          path: current
+          
+      - name: "Copy userpatches to build folder"
+        shell: bash
+        run: |
+          sudo rm -r build/config/sources/families/include/meson_common.inc  
+          rsync -av current/patch/. build/
+          
+      - name: Build Armbian
+        run: |
+          
           cd build
           ./compile.sh \
           BOARD=onecloud \
           BRANCH=current \
-          RELEASE=noble \
+          RELEASE=oracular \
           BUILD_MINIMAL=no \
           BUILD_DESKTOP=no \
           KERNEL_CONFIGURE=no
