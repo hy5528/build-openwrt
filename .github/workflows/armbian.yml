@@ -50,8 +50,7 @@ jobs:
           
       - name: "Copy userpatches to build folder"
         shell: bash
-        run: |
-          sudo rm -r build/config/sources/families/include/meson_common.inc    
+        run: |  
           rsync -av current/patch/. build/
           sudo chown $(id -u):$(id -g) -R build/
       - name: Build Armbian
