@@ -38,9 +38,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y git build-essential debootstrap
-      - name: Build Armbian
+      - name: Checkout armbian/build
         run: |
           git clone --depth=1 --branch=main https://github.com/armbian/build.git build 
+          
+      - name: Build Armbian
+        run: |
           cd build
           ./compile.sh \
           BOARD=onecloud \
