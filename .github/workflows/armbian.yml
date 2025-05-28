@@ -55,7 +55,7 @@ jobs:
         run: |
           sudo rm -r build/config/sources/families/include/meson_common.inc  
           rsync -av current/patch/. build/
-          
+          sudo chown $(id -u):$(id -g) -R build/
       - name: Build Armbian
         run: |
           
