@@ -60,7 +60,7 @@ jobs:
           ./compile.sh \
           BOARD=onecloud \
           BRANCH=current \
-          RELEASE=oracular \
+          RELEASE=plucky \
           BUILD_MINIMAL=no \
           BUILD_DESKTOP=no \
           KERNEL_CONFIGURE=no
