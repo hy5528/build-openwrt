@@ -24,7 +24,7 @@ SKIP_BOOTSPLASH="yes"
 case $BRANCH in
 
 	current)
-		declare -g KERNEL_MAJOR_MINOR="5.9"
+		declare -g KERNEL_MAJOR_MINOR="5.15.184"
 		;;
 esac
 
