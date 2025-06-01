@@ -44,10 +44,13 @@ jobs:
           
       - name: "Apply patch #5076 and #4077"
         run: |
-          curl -L -O "https://github.com/armbian/build/pull/{4077}.patch"
+          mkdir patches
+          cd patches
+          curl -L -O "https://github.com/armbian/build/pull/{4077，5076}.patch"
           for file in *.patch; do
             patch --batch -p1 -N <"$file"
           done     
+          sudo chown $(id -u):$(id -g) -R build/
       - name: Build
         run: |
           cd build
