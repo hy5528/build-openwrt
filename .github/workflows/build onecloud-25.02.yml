@@ -49,7 +49,7 @@ jobs:
           path: patches/   
       - name: "Apply patch #5076 and #4077"
         run: |
-          mkdir patches
+ 
           cd patches
           curl -LO "https://github.com/armbian/build/pull/4077.patch"
           curl -LO "https://github.com/armbian/build/pull/5076.patch"
