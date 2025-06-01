@@ -48,7 +48,7 @@ jobs:
           cd patches
           curl -LO "https://github.com/armbian/build/pull/4077.patch"
           curl -LO "https://github.com/armbian/build/pull/5076.patch"
-          sudo chown $(id -u):$(id -g) -R build/
+          cd ..
           patch --batch -p1 -N < ../patches/5076.patch
           patch --batch -p1 -N < ../patches/4077.patch      
           
