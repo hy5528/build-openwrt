@@ -1,2 +1,0 @@
-vpu=1
-hdmioutput=1
