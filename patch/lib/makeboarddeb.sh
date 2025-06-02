@@ -18,17 +18,14 @@
 
 create_board_package()
 {
-	display_alert "Creating board support package for CLI" "$CHOSEN_ROOTFS" "info"
+	display_alert "Creating board support package" "$BOARD $BRANCH" "info"
 
 	bsptempdir=$(mktemp -d)
 	chmod 700 ${bsptempdir}
-	trap "ret=\$?; rm -rf \"${bsptempdir}\" ; exit \$ret" 0 1 2 3 15
-	local destination=${bsptempdir}/${BSP_CLI_PACKAGE_FULLNAME}
+	trap "rm -rf \"${bsptempdir}\" ; exit 0" 0 1 2 3 15
+	local destination=${bsptempdir}/${RELEASE}/${CHOSEN_ROOTFS}_${REVISION}_${ARCH}
 	mkdir -p "${destination}"/DEBIAN
 	cd $destination
-
-	# copy general overlay from packages/bsp-cli
-	copy_all_packages_files_for "bsp-cli"
 
 	# install copy of boot script & environment file
 	if [[ "${BOOTCONFIG}" != "none" ]]; then
