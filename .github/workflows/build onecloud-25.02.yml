@@ -39,23 +39,7 @@ jobs:
           sudo rm -r build/lib     
           rsync -av current/patch/. build/
           sudo chmod 777 build/compile.sh
-
      
-      - name: Checkout userpatch
-        uses: actions/checkout@v2
-        with:
-          repository: ${{ env.USERPATCH_REPO }}
-          ref: ${{ env.USERPATCH_SHA }}
-          path: patches/   
-      - name: "Apply patch #5076 and #4077"
-        run: |
- 
-          cd patches
-          curl -LO "https://github.com/armbian/build/pull/4077.patch"
-          curl -LO "https://github.com/armbian/build/pull/5076.patch"
-          cd ..
-          patch --batch -p1 -N < ../patches/5076.patch
-          patch --batch -p1 -N < ../patches/4077.patch      
           
       - name: Build
         run: |
