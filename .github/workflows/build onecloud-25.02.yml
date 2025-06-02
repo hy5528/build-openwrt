@@ -26,6 +26,11 @@ jobs:
         run: |
            git clone --depth=1 --branch=main https://github.com/soulteary/armbian-build-s805.git build 
 
+           CORE_DATE=$(TZ=Asia/Shanghai date +"%y.%m.%d")
+           CORE_TAG="玩客云armbian_"
+           show_tag_name=${CORE_TAG}${CORE_DATE}
+           echo "show_tag_name=$show_tag_name" >> $GITHUB_ENV
+           
       - name: "Checkout current repository"
         uses: actions/checkout@v4
         with:
