@@ -1,57 +1,76 @@
+ARCH=armhf
+LINUXFAMILY=meson
+KERNEL_IMAGE_TYPE=uImage
+SRC_LOADADDR='LOADADDR=0x00208000'
 
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta content="origin" name="referrer">
-    <title>Forbidden &middot; GitHub</title>
-    <style type="text/css" media="screen">
-      body {
-        background-color: #f1f1f1;
-        margin: 0;
-      }
-      body,
-      input,
-      button {
-        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-      }
-      .container { margin: 30px auto 40px auto; width: 800px; text-align: center; }
-      a { color: #4183c4; text-decoration: none; font-weight: bold; }
-      a:hover { text-decoration: underline; }
-      h1, h2, h3 { color: #666; }
-      ul { list-style: none; padding: 25px 0; }
-      li {
-        display: inline;
-        margin: 10px 50px 10px 0px;
-      }
-      .logo { display: inline-block; margin-top: 35px; }
-      .logo-img-2x { display: none; }
-      @media
-      only screen and (-webkit-min-device-pixel-ratio: 2),
-      only screen and (   min--moz-device-pixel-ratio: 2),
-      only screen and (     -o-min-device-pixel-ratio: 2/1),
-      only screen and (        min-device-pixel-ratio: 2),
-      only screen and (                min-resolution: 192dpi),
-      only screen and (                min-resolution: 2dppx) {
-        .logo-img-1x { display: none; }
-        .logo-img-2x { display: inline-block; }
-      }
-    </style>
-  </head>
-  <body>
+SERIALCON="ttyAML0"
 
-    <div class="container">
-      <h1>Access to this site has been restricted.</h1>
+CPUMIN=504000
+CPUMAX=1632000
+GOVERNOR=ondemand
 
-      <p>
-        <br>
-        If you believe this is an error,
-        please contact <a href="https://support.github.com">Support</a>.
-      </p>
+SKIP_BOOTSPLASH="yes"
 
-      <div id="s">
-        <a href="https://githubstatus.com">GitHub Status</a> &mdash;
-        <a href="https://twitter.com/githubstatus">@githubstatus</a>
-      </div>
-    </div>
-  </body>
-</html>
+case $BOARD in
+	odroidc1)
+
+		BOOTDIR='u-boot-odroidc1'
+		BOOTSOURCE='https://github.com/hardkernel/u-boot.git'
+		BOOTBRANCH='branch:odroidc-v2011.03'
+
+		UBOOT_COMPILER="arm-linux-gnueabihf-"
+		UBOOT_USE_GCC='< 4.9'
+
+		UBOOT_TARGET_MAP=';;sd_fuse/bl1.bin.hardkernel sd_fuse/u-boot.bin'
+
+	;;
+esac
+
+case $BRANCH in
+	legacy)
+
+		KERNELBRANCH="branch:linux-5.10.y"
+		KERNELPATCHDIR='meson-'$BRANCH
+
+    ;;
+
+	current)
+
+		KERNELBRANCH="branch:linux-5.15.y"
+		KERNELPATCHDIR='meson-'$BRANCH
+
+	  ;;
+
+	edge)
+
+		KERNELBRANCH="branch:linux-5.18.y"
+		KERNELPATCHDIR='meson-'$BRANCH
+
+	  ;;
+esac
+
+write_uboot_platform()
+{
+	dd if=$1/bl1.bin.hardkernel of=$2 bs=1 count=442 conv=fsync > /dev/null 2>&1
+	dd if=$1/bl1.bin.hardkernel of=$2 bs=512 skip=1 seek=1 conv=fsync > /dev/null 2>&1
+	dd if=$1/u-boot.bin of=$2 bs=512 seek=64 conv=fsync > /dev/null 2>&1
+	dd if=/dev/zero of=$2 seek=1024 count=32 bs=512 conv=fsync > /dev/null 2>&1
+}
+
+family_tweaks()
+{
+	:
+}
+
+family_tweaks_bsp()
+{
+	mkdir -p "$destination/etc/X11/xorg.conf.d"
+	cat <<-EOF >"$destination/etc/X11/xorg.conf.d/02-driver.conf"
+	Section "OutputClass"
+		Identifier "Amlogic"
+		MatchDriver "meson"
+		Driver "modesetting"
+		Option "PrimaryGPU" "true"
+	EndSection
+	EOF
+}
