@@ -29,7 +29,7 @@ HOSTRELEASE=$(cat /etc/os-release | grep VERSION_CODENAME | cut -d"=" -f2)
 [[ -z $EXIT_PATCHING_ERROR ]] && EXIT_PATCHING_ERROR="" # exit patching if failed
 [[ -z $HOST ]] && HOST="$BOARD" # set hostname to the board
 cd "${SRC}" || exit
-[[ -z "${ROOTFSCACHE_VERSION}" ]] && ROOTFSCACHE_VERSION=18
+
 [[ -z "${CHROOT_CACHE_VERSION}" ]] && CHROOT_CACHE_VERSION=7
 BUILD_REPOSITORY_URL=$(improved_git remote get-url $(improved_git remote 2>/dev/null | grep origin) 2>/dev/null)
 BUILD_REPOSITORY_COMMIT=$(improved_git describe --match=d_e_a_d_b_e_e_f --always --dirty 2>/dev/null)
@@ -75,7 +75,7 @@ if [[ $CRYPTROOT_ENABLE == yes && -z $CRYPTROOT_PASSPHRASE ]]; then
 fi
 
 # small SD card with kernel, boot script and .dtb/.bin files
-[[ $ROOTFS_TYPE == nfs ]] && FIXED_IMAGE_SIZE=64
+[[ $ROOTFS_TYPE == nfs ]] && FIXED_IMAGE_SIZE=256
 
 # Since we are having too many options for mirror management,
 # then here is yet another mirror related option.
@@ -159,6 +159,7 @@ ATF_COMPILE=yes
 [[ -z $WIREGUARD ]] && WIREGUARD="yes"
 [[ -z $EXTRAWIFI ]] && EXTRAWIFI="yes"
 [[ -z $SKIP_BOOTSPLASH ]] && SKIP_BOOTSPLASH="no"
+[[ -z $PLYMOUTH ]] && PLYMOUTH="yes"
 [[ -z $AUFS ]] && AUFS="yes"
 [[ -z $IMAGE_PARTITION_TABLE ]] && IMAGE_PARTITION_TABLE="msdos"
 [[ -z $EXTRA_BSP_NAME ]] && EXTRA_BSP_NAME=""
@@ -178,6 +179,12 @@ fi
 
 # load architecture defaults
 source "${SRC}/config/sources/${ARCH}.conf"
+
+if [[ "$HAS_VIDEO_OUTPUT" == "no" ]]; then
+	SKIP_BOOTSPLASH="yes"
+	PLYMOUTH="no"
+	[[ $BUILD_DESKTOP != "no" ]] && exit_with_error "HAS_VIDEO_OUTPUT is set to no. So we shouldn't build desktop environment"
+fi
 
 ## Extensions: at this point we've sourced all the config files that will be used,
 ##             and (hopefully) not yet invoked any extension methods. So this is the perfect

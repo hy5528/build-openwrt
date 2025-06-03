@@ -33,6 +33,7 @@ mount_chroot()
 {
 
 	local target=$1
+	mount -t tmpfs tmpfs "${target}/tmp"
 	mount -t proc chproc "${target}"/proc
 	mount -t sysfs chsys "${target}"/sys
 	mount -t devtmpfs chdev "${target}"/dev || mount --bind /dev "${target}"/dev
@@ -52,11 +53,12 @@ umount_chroot()
 
 	local target=$1
 	display_alert "Unmounting" "$target" "info"
-	while grep -Eq "${target}.*(dev|proc|sys)" /proc/mounts
+	while grep -Eq "${target}/*(dev|proc|sys|tmp)" /proc/mounts
 	do
 		umount -l --recursive "${target}"/dev >/dev/null 2>&1
 		umount -l "${target}"/proc >/dev/null 2>&1
 		umount -l "${target}"/sys >/dev/null 2>&1
+		umount -l "${target}"/tmp >/dev/null 2>&1
 		sleep 5
 	done
 
@@ -220,7 +222,6 @@ install_deb_chroot()
 	display_alert "Installing${desc}" "${name/\/root\//}"
 	[[ $NO_APT_CACHER != yes ]] && local apt_extra="-o Acquire::http::Proxy=\"http://${APT_PROXY_ADDR:-localhost:3142}\" -o Acquire::http::Proxy::localhost=\"DIRECT\""
 	# when building in bulk from remote, lets make sure we have up2date index
-	[[ $BUILD_ALL == yes && ${variant} == remote ]] && chroot "${SDCARD}" /bin/bash -c "DEBIAN_FRONTEND=noninteractive apt-get $apt_extra -yqq update"
 	chroot "${SDCARD}" /bin/bash -c "DEBIAN_FRONTEND=noninteractive apt-get -yqq $apt_extra --no-install-recommends install $name" >> "${DEST}"/${LOG_SUBPATH}/install.log 2>&1
 	[[ $? -ne 0 ]] && exit_with_error "Installation of $name failed" "${BOARD} ${RELEASE} ${BUILD_DESKTOP} ${LINUXFAMILY}"
 	[[ ${variant} == remote && ${transfer} == yes ]] && rsync -rq "${SDCARD}"/var/cache/apt/archives/*.deb ${DEB_STORAGE}/

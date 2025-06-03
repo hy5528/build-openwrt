@@ -107,23 +107,35 @@ compilation_prepare()
 		process_patch_file "${SRC}/patch/misc/general-packaging-4.9.y.patch" "applying"
 	fi
 
+	# After the patches have been applied,
+	# check and add debian package compression if required.
 	#
-	# Linux splash file
+	if [ "$(awk '/dpkg --build/{print $1}' $kerneldir/scripts/package/builddeb)" == "dpkg" ];then
+		sed -i -e '
+			s/dpkg --build/dpkg-deb \${KDEB_COMPRESS:+-Z\$KDEB_COMPRESS} --build/
+			' "$kerneldir"/scripts/package/builddeb
+	fi
+
+	#
+	# Linux splash file (legacy)
 	#
 
-	if linux-version compare "${version}" ge 5.10 && [ $SKIP_BOOTSPLASH != yes ]; then
+	# since plymouth introduction, boot scripts are not supporting this method anymore.
+	# In order to enable it, you need to use this: setenv consoleargs "bootsplash.bootfile=bootsplash.armbian ${consoleargs}"
+
+	if linux-version compare "${version}" ge 5.15 && [ "${SKIP_BOOTSPLASH}" != yes ]; then
 
 		display_alert "Adding" "Kernel splash file" "info"
-		if linux-version compare "${version}" ge 5.11; then
-			process_patch_file "${SRC}/patch/misc/bootsplash-5.16.y-0000-Revert-fbcon-Avoid-cap-set-but-not-used-warning.patch" "applying"
+
+		if linux-version compare "${version}" ge 5.19.6 \
+		|| ( linux-version compare "${version}" ge 5.15.64 && linux-version compare "${version}" lt 5.16 ) ; then
+			process_patch_file "${SRC}/patch/misc/0001-Revert-fbdev-fbcon-Properly-revert-changes-when-vc_r.patch" "applying"
 		fi
 
+		process_patch_file "${SRC}/patch/misc/bootsplash-5.16.y-0000-Revert-fbcon-Avoid-cap-set-but-not-used-warning.patch" "applying"
+		process_patch_file "${SRC}/patch/misc/0001-Revert-fbcon-Fix-accelerated-fbdev-scrolling-while-logo-is-still-shown.patch" "applying"
 		process_patch_file "${SRC}/patch/misc/bootsplash-5.16.y-0001-Revert-fbcon-Add-option-to-enable-legacy-hardware-ac.patch" "applying"
-
-		if linux-version compare "${version}" ge 5.15; then
-			process_patch_file "${SRC}/patch/misc/bootsplash-5.16.y-0002-Revert-vgacon-drop-unused-vga_init_done.patch" "applying"
-		fi
-
+		process_patch_file "${SRC}/patch/misc/bootsplash-5.16.y-0002-Revert-vgacon-drop-unused-vga_init_done.patch" "applying"
 		process_patch_file "${SRC}/patch/misc/bootsplash-5.16.y-0003-Revert-vgacon-remove-software-scrollback-support.patch" "applying"
 		process_patch_file "${SRC}/patch/misc/bootsplash-5.16.y-0004-Revert-drivers-video-fbcon-fix-NULL-dereference-in-f.patch" "applying"
 		process_patch_file "${SRC}/patch/misc/bootsplash-5.16.y-0005-Revert-fbcon-remove-no-op-fbcon_set_origin.patch" "applying"
@@ -142,6 +154,17 @@ compilation_prepare()
 		process_patch_file "${SRC}/patch/misc/0010-bootsplash.patch" "applying"
 		process_patch_file "${SRC}/patch/misc/0011-bootsplash.patch" "applying"
 		process_patch_file "${SRC}/patch/misc/0012-bootsplash.patch" "applying"
+
+	fi
+
+	#
+	# Returning headers needed for some wireless drivers
+	#
+
+	if linux-version compare "${version}" ge 5.4 && [ $EXTRAWIFI == yes ]; then
+
+		display_alert "Adding" "Missing headers" "info"
+		process_patch_file "${SRC}/patch/misc/wireless-bring-back-headers.patch" "applying"
 
 	fi
 
@@ -166,16 +189,15 @@ compilation_prepare()
 	#
 	# Older versions have AUFS support with a patch
 
-	if linux-version compare "${version}" ge 5.1 && linux-version compare "${version}" lt 5.15 && [ "$AUFS" == yes ]; then
+	if linux-version compare "${version}" gt 5.11 && linux-version compare "${version}" lt 5.20 && [ "$AUFS" == yes ]; then
 
 		# attach to specifics tag or branch
 		local aufstag
 		aufstag=$(echo "${version}" | cut -f 1-2 -d ".")
 
 		# manual overrides
-		if linux-version compare "${version}" ge 5.4.3 && linux-version compare "${version}" le 5.5 ; then aufstag="5.4.3"; fi
 		if linux-version compare "${version}" ge 5.10.82 && linux-version compare "${version}" le 5.11 ; then aufstag="5.10.82"; fi
-		if linux-version compare "${version}" ge 5.15.5 && linux-version compare "${version}" le 5.16 ; then aufstag="5.15.5"; fi
+		if linux-version compare "${version}" ge 5.15.41 && linux-version compare "${version}" le 5.16 ; then aufstag="5.15.41"; fi
 		if linux-version compare "${version}" ge 5.17.3 && linux-version compare "${version}" le 5.18 ; then aufstag="5.17.3"; fi
 
 		# check if Mr. Okajima already made a branch for this version
@@ -360,7 +382,7 @@ compilation_prepare()
 	if linux-version compare "${version}" ge 3.14 && [ "$EXTRAWIFI" == yes ]; then
 
 		# attach to specifics tag or branch
-		local rtl8812auver="branch:v5.6.4.2"
+		local rtl8812auver="commit:41532e3b16dcf27f06e6fe5a26314f3aa24d4f87"
 
 		display_alert "Adding" "Wireless drivers for Realtek 8811, 8812, 8814 and 8821 chipsets ${rtl8812auver}" "info"
 
@@ -384,30 +406,34 @@ compilation_prepare()
 		sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wireless\/rtl8812au\/Kconfig"' \
 		"$kerneldir/drivers/net/wireless/Kconfig"
 
+                # add support for 5.19.2
+                process_patch_file "${SRC}/patch/misc/wireless-rtl8812au-5.19.2.patch" "applying"
+
 	fi
 
 
 
 
 	# Wireless drivers for Xradio XR819 chipsets
-	if linux-version compare "${version}" ge 4.19 && [[ "$LINUXFAMILY" == sunxi* ]] && [[ "$EXTRAWIFI" == yes ]]; then
+	if linux-version compare "${version}" ge 4.19 && linux-version compare "${version}" le 5.19 && \
+		[[ "$LINUXFAMILY" == sunxi* ]] && [[ "$EXTRAWIFI" == yes ]]; then
 
 		display_alert "Adding" "Wireless drivers for Xradio XR819 chipsets" "info"
 
-		fetch_from_repo "$GITHUB_SOURCE/karabek/xradio" "xradio" "branch:master" "yes"
+		fetch_from_repo "$GITHUB_SOURCE/dbeinder/xradio" "xradio" "branch:karabek_rebase" "yes"
 		cd "$kerneldir" || exit
 		rm -rf "$kerneldir/drivers/net/wireless/xradio"
 		mkdir -p "$kerneldir/drivers/net/wireless/xradio/"
-		cp "${SRC}"/cache/sources/xradio/master/*.{h,c} \
+		cp "${SRC}"/cache/sources/xradio/karabek_rebase/*.{h,c} \
 		"$kerneldir/drivers/net/wireless/xradio/"
 
 		# Makefile
-		cp "${SRC}/cache/sources/xradio/master/Makefile" \
+		cp "${SRC}/cache/sources/xradio/karabek_rebase/Makefile" \
 		"$kerneldir/drivers/net/wireless/xradio/Makefile"
 
 		# Kconfig
-		sed -i 's/---help---/help/g' "${SRC}/cache/sources/xradio/master/Kconfig"
-		cp "${SRC}/cache/sources/xradio/master/Kconfig" \
+		sed -i 's/---help---/help/g' "${SRC}/cache/sources/xradio/karabek_rebase/Kconfig"
+		cp "${SRC}/cache/sources/xradio/karabek_rebase/Kconfig" \
 		"$kerneldir/drivers/net/wireless/xradio/Kconfig"
 
 		# Add to section Makefile
@@ -419,6 +445,11 @@ compilation_prepare()
 		# add support for K5.13+
                 process_patch_file "${SRC}/patch/misc/wireless-xradio-5.13.patch" "applying"
 
+		# add support for aarch64
+		if [[ $ARCH == arm64 ]]; then
+		process_patch_file "${SRC}/patch/misc/wireless-xradio-aarch64.patch" "applying"
+		fi
+
 	fi
 
 
@@ -429,7 +460,7 @@ compilation_prepare()
 	if linux-version compare "${version}" ge 3.14 && [ "$EXTRAWIFI" == yes ]; then
 
 		# attach to specifics tag or branch
-		local rtl8811cuver="commit:de68bd50671ad8a5c09af97def3f2059b4a088aa"
+		local rtl8811cuver="commit:8c2226a74ae718439d56248bd2e44ccf717086d5"
 
 		display_alert "Adding" "Wireless drivers for Realtek RTL8811CU and RTL8821C chipsets ${rtl8811cuver}" "info"
 
@@ -461,6 +492,12 @@ compilation_prepare()
 		echo "obj-\$(CONFIG_RTL8821CU) += rtl8811cu/" >> "$kerneldir/drivers/net/wireless/Makefile"
 		sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wireless\/rtl8811cu\/Kconfig"' \
 		"$kerneldir/drivers/net/wireless/Kconfig"
+
+		# add support for 5.18.y
+		process_patch_file "${SRC}/patch/misc/wireless-rtl8821cu.patch" "applying"
+
+		# add support for 5.19.2
+                process_patch_file "${SRC}/patch/misc/wireless-rtl8811cu-5.19.2.patch" "applying"
 
 	fi
 
@@ -518,7 +555,7 @@ compilation_prepare()
 	if linux-version compare "${version}" ge 5.0 && [ "$EXTRAWIFI" == yes ]; then
 
 		# attach to specifics tag or branch
-		local rtl88x2buver="branch:5.8.7.1_35809.20191129_COEX20191120-7777"
+		local rtl88x2buver="commit:00f51d93fe8309b0e23782ad621a038c98c7f031"
 
 		display_alert "Adding" "Wireless drivers for Realtek 88x2bu chipsets ${rtl88x2buver}" "info"
 
@@ -636,6 +673,8 @@ compilation_prepare()
 		sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wireless\/rtl8723ds\/Kconfig"' \
 		"$kerneldir/drivers/net/wireless/Kconfig"
 
+		process_patch_file "${SRC}/patch/misc/wireless-rtl8723ds-5.19.2.patch" "applying"
+
 	fi
 
 
@@ -645,12 +684,7 @@ compilation_prepare()
 
 	if linux-version compare $version ge 5.0 && [ "$EXTRAWIFI" == yes ]; then
 
-		# attach to specifics tag or branch
-		if linux-version compare $version ge 5.12 ; then
-			local rtl8723duver="branch:v5.13.4"
-		else
-			local rtl8723duver="branch:master"
-		fi
+		local rtl8723duver="branch:master"
 
 		display_alert "Adding" "Wireless drivers for Realtek 8723DU chipsets ${rtl8723duver}" "info"
 
@@ -674,7 +708,7 @@ compilation_prepare()
 		sed -i '/source "drivers\/net\/wireless\/ti\/Kconfig"/a source "drivers\/net\/wireless\/rtl8723du\/Kconfig"' \
 		$kerneldir/drivers/net/wireless/Kconfig
 
-		process_patch_file "${SRC}/patch/misc/wireless-rtl8723du.patch" "applying"
+		process_patch_file "${SRC}/patch/misc/wireless-rtl8723du-5.19.2.patch" "applying"
 	fi
 
 
@@ -709,7 +743,39 @@ compilation_prepare()
 
 	fi
 
+	# Exfat driver
 
+	if linux-version compare "${version}" ge 4.9 && linux-version compare "${version}" le 5.4; then
+
+		# attach to specifics tag or branch
+		display_alert "Adding" "exfat driver ${exfatsver}" "info"
+
+		local exfatsver="branch:master"
+		fetch_from_repo "$GITHUB_SOURCE/arter97/exfat-linux" "exfat" "${exfatsver}" "yes"
+		cd "$kerneldir" || exit
+		mkdir -p $kerneldir/fs/exfat/
+		cp -R "${SRC}/cache/sources/exfat/${exfatsver#*:}"/{*.c,*.h} \
+		$kerneldir/fs/exfat/
+
+		# Add to section Makefile
+		echo "obj-\$(CONFIG_EXFAT_FS) += exfat/" >> $kerneldir/fs/Makefile
+
+		# Makefile
+		cat <<-EOF > "$kerneldir/fs/exfat/Makefile"
+		# SPDX-License-Identifier: GPL-2.0-or-later
+		#
+		# Makefile for the linux exFAT filesystem support.
+		#
+		obj-\$(CONFIG_EXFAT_FS) += exfat.o
+		exfat-y	:= inode.o namei.o dir.o super.o fatent.o cache.o nls.o misc.o file.o balloc.o xattr.o
+		EOF
+
+		# Kconfig
+		sed  -i '$i\source "fs\/exfat\/Kconfig"' $kerneldir/fs/Kconfig
+		cp "${SRC}/cache/sources/exfat/${exfatsver#*:}/Kconfig" \
+		"$kerneldir/fs/exfat/Kconfig"
+
+	fi
 
 	if linux-version compare $version ge 4.4 && linux-version compare $version lt 5.8; then
 		display_alert "Adjusting" "Framebuffer driver for ST7789 IPS display" "info"

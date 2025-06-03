@@ -44,7 +44,7 @@ else
 	DEST="${SRC}"/output
 fi
 
-if [[ $BUILD_ALL != "yes" && -z $ROOT_FS_CREATE_ONLY ]]; then
+if [[ -z $ROOT_FS_CREATE_ONLY ]]; then
 	# override stty size
 	[[ -n $COLUMNS ]] && stty cols $COLUMNS
 	[[ -n $LINES ]] && stty rows $LINES
@@ -322,9 +322,9 @@ if [[ $KERNEL_ONLY != yes && -z $RELEASE ]]; then
 fi
 
 # don't show desktop option if we choose minimal build
-[[ $BUILD_MINIMAL == yes ]] && BUILD_DESKTOP=no
-
-if [[ $KERNEL_ONLY != yes && -z $BUILD_DESKTOP ]]; then
+if [[ $HAS_VIDEO_OUTPUT == no || $BUILD_MINIMAL == yes ]]; then
+	BUILD_DESKTOP=no
+elif [[ $KERNEL_ONLY != yes && -z $BUILD_DESKTOP ]]; then
 
 	# read distribution support status which is written to the armbian-release file
 	set_distribution_status
@@ -399,7 +399,7 @@ POST_DETERMINE_CTHREADS
 
 if [[ $BETA == yes ]]; then
 	IMAGE_TYPE=nightly
-elif [[ $BETA != "yes" && $BUILD_ALL == yes ]]; then
+elif [[ $BETA != "yes" ]]; then
 	IMAGE_TYPE=stable
 else
 	IMAGE_TYPE=user-built
@@ -501,6 +501,13 @@ fi
 if [[ ! -f ${DEB_STORAGE}/armbian-zsh_${REVISION}_all.deb ]]; then
 
         [[ "${REPOSITORY_INSTALL}" != *armbian-zsh* ]] && compile_armbian-zsh
+
+fi
+
+# Compile plymouth-theme-armbian if packed .deb does not exist or use the one from repository
+if [[ ! -f ${DEB_STORAGE}/plymouth-theme-armbian_${REVISION}_all.deb ]]; then
+
+        [[ "${REPOSITORY_INSTALL}" != *plymouth-theme-armbian* ]] && compile_plymouth-theme-armbian
 
 fi
 
