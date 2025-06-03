@@ -3,7 +3,7 @@ FROM $BASE_IMAGE as armbian_builder
 ARG CUSTOM_PACKAGES='g++-11-arm-linux-gnueabihf libssl3'
 ENV CUSTOM_PACKAGES $CUSTOM_PACKAGES
 ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get -y install \
+RUN apt-get update && apt-get -y dist-upgrade && apt-get -y install \
        joe \
        software-properties-common \
        gnupg \
@@ -21,7 +21,7 @@ RUN sh -c " \
         libc6-i386; \
     fi"
 RUN apt-get update \
-    && apt-get -y upgrade \
+    && apt-get -y dist-upgrade \
     && apt-get install -y --no-install-recommends \
        $CUSTOM_PACKAGES \
        acl \
@@ -33,6 +33,7 @@ RUN apt-get update \
        bison \
        btrfs-progs \
        build-essential \
+       busybox \
        ca-certificates \
        ccache \
        cpio \
@@ -48,8 +49,10 @@ RUN apt-get update \
        dwarves \
        f2fs-tools \
        fakeroot \
+       fdisk \
        flex \
        gawk \
+       gcc-aarch64-linux-gnu \
        gcc-arm-linux-gnueabihf \
        gcc-arm-linux-gnueabi \
        gcc-arm-none-eabi \
@@ -72,6 +75,7 @@ RUN apt-get update \
        libssl-dev \
        libusb-1.0-0-dev \
        linux-base \
+       libmpc-dev \
        locales \
        lsb-release \
        lzop \
@@ -112,6 +116,7 @@ RUN apt-get update \
        xfsprogs \
        xxd \
        zip \
+       zstd \
        zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 RUN locale-gen en_US.UTF-8
