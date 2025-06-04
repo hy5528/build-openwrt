@@ -9,10 +9,10 @@ env:
   UBOOT_RELEASE: latest
   UBOOT_BURNIMG: eMMC.burn.img
   ARMBIAN_REPO: armbian/build
-  ARMBIAN_REF: v22.11
+  ARMBIAN_REF: v22.05
   USERPATCH_REPO: ${{ github.repository }}
   USERPATCH_REF: ${{ github.ref_name }}
-  BRANCH: current
+  BRANCH: edge
   RELEASE: jammy
   TYPE: minimal
 
