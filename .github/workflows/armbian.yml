@@ -45,7 +45,7 @@ jobs:
           ./compile.sh \
           BOARD=onecloud \
           BRANCH=current \
-          RELEASE=jammy \
+          RELEASE=bullseye \
           BUILD_MINIMAL=no \
           BUILD_DESKTOP=no \
           KERNEL_CONFIGURE=no
