@@ -12,7 +12,7 @@ env:
   ARMBIAN_REF: v22.11
   USERPATCH_REPO: ${{ github.repository }}
   USERPATCH_REF: ${{ github.ref_name }}
-  BRANCH: edge
+  BRANCH: legacy
   RELEASE: jammy
   TYPE: minimal
 
