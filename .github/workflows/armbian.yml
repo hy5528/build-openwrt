@@ -44,7 +44,7 @@ jobs:
           cd build
           ./compile.sh \
           BOARD=onecloud \
-          BRANCH=legacy \
+          BRANCH=current \
           RELEASE=jammy \
           BUILD_MINIMAL=no \
           BUILD_DESKTOP=no \
