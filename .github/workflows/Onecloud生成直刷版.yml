@@ -50,15 +50,12 @@ jobs:
           
       - name: Install Dependents
         run: |
-         sudo apt install android-sdk-libsparse-utils
-          ver="v0.3.2"
-          curl -L -o ./AmlImg https://github.com/rmoyulong/AmlImg/releases/download/$ver/AmlImg_${ver}_linux_amd64
+          sudo apt install img2simg
+          ver="v0.3.1"
           chmod +x ./AmlImg
       - name: Download and unpack the latest u-boot
         run: |
-          echo "::group::Download"
-          curl -L -o ./uboot.img https://github.com/rmoyulong/u-boot-onecloud/releases/download/Onecloud_Uboot_23.12.24_18.15.09/eMMC.burn.img
-          echo "::endgroup::"
+          ./AmlImg unpack ./uboot.img burn/
       - name: Extract boot and rootfs partitions
         run: |
           diskimg=$(ls build/output/images/*.img)
