@@ -1,6 +1,7 @@
 name: Onecloud2
 
 on:
+  repository_dispatch:
   workflow_dispatch:
     inputs:
       upload_artifacts:
