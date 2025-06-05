@@ -112,7 +112,7 @@ jobs:
       - name: 生成标签，上传固件
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.CORE_TAG }}
+          tag_name: $(date +%Y%m%d)" >> $GITHUB_ENV
           #append_body: true
           files: |
             imageupload/*
@@ -124,22 +124,4 @@ jobs:
             ➦ 🌐 默认用户：root
             ➦ 🔑 默认密码：1234
 
-      - name: Create Release Tag
-        if: env.UPLOAD_RELEASE == 'true'
-        run: |
-          echo "release_tag=$(date +%Y%m%d)" >> $GITHUB_ENV
-
-      - name: Upload artifacts
-        if: env.UPLOAD_ARTIFACTS == 'true'
-        uses: actions/upload-artifact@main
-        with:
-          name: armbian-image
-          path: ./build/output/images/*.xz
-
-      - name: Upload to release
-        if: env.UPLOAD_RELEASE == 'true'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ env.release_tag }}
-          name: Armbian ${{ env.release_tag }}
-          files: ./build/output/images/*.xz
+      -
