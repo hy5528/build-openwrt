@@ -14,7 +14,7 @@ env:
   UBOOT_REPO: hzyitc/u-boot-onecloud
   UBOOT_RELEASE: latest
   UBOOT_BURNIMG: eMMC.burn.img
-  ARMBIAN_REPO: qtvhao/armhf-build
+  ARMBIAN_REPO: armbian/build
   ARMBIAN_REF: master
   PATCHES: 4077,5076
   PATCHES_DISABLED: 5082
@@ -181,7 +181,7 @@ jobs:
           - current
         RELEASE:
           # - focal # Ubuntu 20.04 LTS
-          # - jammy # Ubuntu 22.04 LTS
+          - jammy # Ubuntu 22.04 LTS
           # - noble # Ubuntu 24.04 LTS
           # - oracular # Ubuntu 24.10
           # - plucky # Ubuntu 25.04
@@ -191,8 +191,8 @@ jobs:
           # - trixie # Debian 13
           # - sid # Debian unstable
         TYPE:
-          - minimal
-          # - cli
+          # - minimal
+          - cli
           # - desktop
        
 
