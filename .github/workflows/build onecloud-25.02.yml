@@ -38,7 +38,7 @@ jobs:
         run: |
           sudo rm -r build/lib
           sudo rm -r build/config/templates    
-                            
+          sudo rm -r build/config/torrents                  
           rsync -av current/patch/. build/
           sudo chmod 777 build/compile.sh
           
