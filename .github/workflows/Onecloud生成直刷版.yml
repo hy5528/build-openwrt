@@ -45,8 +45,8 @@ jobs:
           mkdir -p build/output/images
           chmod -R 777 build
           cd build/output/images
-          wget https://github.com/teasiu/armbian-onecloud/releases/download/ci-20221125-203039-UTC/Armbian_22.11.0-trunk_Onecloud_bullseye_current_5.15.79.img.xz
-          unxz Armbian_22.11.0-trunk_Onecloud_bullseye_current_5.15.79.img.xz
+          wget https://github.com/SLAzurin/build-armbian-custom/releases/download/v2021.11-s8xx/Armbian_21.11.0-trunk_Aml-s812_focal_current_5.14.0.img.xz
+          unxz Armbian_21.11.0-trunk_Aml-s812_focal_current_5.14.0.img.xz
           
       - name: Install Dependents
         run: |
