@@ -56,6 +56,7 @@ cleaning()
 			find "${DEB_STORAGE}" -name "${CHOSEN_UBOOT}_*.deb" -delete
 			find "${DEB_STORAGE}" \( -name "${CHOSEN_KERNEL}_*.deb" -o \
 				-name "armbian-*.deb" -o \
+				-name "plymouth-theme-armbian_*.deb" -o \
 				-name "${CHOSEN_KERNEL/image/dtb}_*.deb" -o \
 				-name "${CHOSEN_KERNEL/image/headers}_*.deb" -o \
 				-name "${CHOSEN_KERNEL/image/source}_*.deb" -o \
@@ -97,7 +98,7 @@ cleaning()
 		;;
 
 		oldcache) # remove old `cache/rootfs` except for the newest 8 files
-		if [[ -d "${SRC}"/cache/rootfs && $(ls -1 "${SRC}"/cache/rootfs/*.lz4 2> /dev/null | wc -l) -gt "${ROOTFS_CACHE_MAX}" ]]; then
+		if [[ -d "${SRC}"/cache/rootfs && $(ls -1 "${SRC}"/cache/rootfs/*.zst* 2> /dev/null | wc -l) -gt "${ROOTFS_CACHE_MAX}" ]]; then
 			display_alert "Cleaning" "rootfs cache (old)" "info"
 			(cd "${SRC}"/cache/rootfs; ls -t *.lz4 | sed -e "1,${ROOTFS_CACHE_MAX}d" | xargs -d '\n' rm -f)
 			# Remove signatures if they are present. We use them for internal purpose
@@ -153,8 +154,10 @@ get_package_list_hash()
 	local list_content
 	read -ra package_arr <<< "${DEBOOTSTRAP_LIST} ${PACKAGE_LIST}"
 	read -ra exclude_arr <<< "${PACKAGE_LIST_EXCLUDE}"
-	( ( printf "%s\n" "${package_arr[@]}"; printf -- "-%s\n" "${exclude_arr[@]}" ) | sort -u; echo "${1}" ) \
-		| md5sum | cut -d' ' -f 1
+	(
+		printf "%s\n" "${package_arr[@]}"
+		printf -- "-%s\n" "${exclude_arr[@]}"
+	) | sort -u | md5sum | cut -d' ' -f 1
 }
 
 # create_sources_list <release> <basedir>
@@ -169,6 +172,22 @@ create_sources_list()
 	[[ -z $basedir ]] && exit_with_error "No basedir passed to create_sources_list"
 
 	case $release in
+	buster)
+	cat <<-EOF > "${basedir}"/etc/apt/sources.list
+	deb http://${DEBIAN_MIRROR} $release main contrib non-free
+	#deb-src http://${DEBIAN_MIRROR} $release main contrib non-free
+
+	deb http://${DEBIAN_MIRROR} ${release}-updates main contrib non-free
+	#deb-src http://${DEBIAN_MIRROR} ${release}-updates main contrib non-free
+
+	deb http://${DEBIAN_MIRROR} ${release}-backports main contrib non-free
+	#deb-src http://${DEBIAN_MIRROR} ${release}-backports main contrib non-free
+
+	deb http://${DEBIAN_SECURTY} ${release}/updates main contrib non-free
+	#deb-src http://${DEBIAN_SECURTY} ${release}/updates main contrib non-free
+	EOF
+	;;
+
 	bullseye|bookworm|trixie)
 	cat <<-EOF > "${basedir}"/etc/apt/sources.list
 	deb http://${DEBIAN_MIRROR} $release main contrib non-free
@@ -187,13 +206,12 @@ create_sources_list()
 
 	sid) # sid is permanent unstable development and has no such thing as updates or security
 	cat <<-EOF > "${basedir}"/etc/apt/sources.list
-	deb http://${DEBIAN_MIRROR} $release main
-	deb http://${DEBIAN_MIRROR} unreleased main
-	#deb-src http://${DEBIAN_MIRROR} $release main
+	deb http://${DEBIAN_MIRROR} $release main contrib non-free
+	#deb-src http://${DEBIAN_MIRROR} $release main contrib non-free
 	EOF
 	;;
 
-	jammy)
+	focal|jammy)
 	cat <<-EOF > "${basedir}"/etc/apt/sources.list
 	deb http://${UBUNTU_MIRROR} $release main restricted universe multiverse
 	#deb-src http://${UBUNTU_MIRROR} $release main restricted universe multiverse
@@ -664,15 +682,15 @@ fingerprint_image()
 		CPU configuration: $CPUMIN - $CPUMAX with $GOVERNOR
 		--------------------------------------------------------------------------------
 		Verify GPG signature:
-		gpg --verify $2.img.asc
+		gpg --verify $2.img.xz.asc
 
 		Verify image file integrity:
-		sha256sum --check $2.img.sha
+		sha256sum --check $2.img.xz.sha
 
-		Prepare SD card (four methodes):
-		zcat $2.img.gz | pv | dd of=/dev/mmcblkX bs=1M
+		Prepare SD card (four methods):
+		xzcat $2.img.xz | pv | dd of=/dev/mmcblkX bs=1M
 		dd if=$2.img of=/dev/mmcblkX bs=1M
-		balena-etcher $2.img.gz -d /dev/mmcblkX
+		balena-etcher $2.img.xz -d /dev/mmcblkX
 		balena-etcher $2.img -d /dev/mmcblkX
 		EOF
 	fi
@@ -795,8 +813,8 @@ display_alert "Building kernel splash logo" "$RELEASE" "info"
 	--blob "${SDCARD}"/tmp/throbber74.rgb \
 	"${SDCARD}"/lib/firmware/bootsplash.armbian >/dev/null 2>&1
 	if [[ $BOOT_LOGO == yes || $BOOT_LOGO == desktop && $BUILD_DESKTOP == yes ]]; then
-		[[ -f "${SDCARD}"/boot/testEnv.txt ]] &&	grep -q '^bootlogo' "${SDCARD}"/boot/testEnv.txt && \
-		sed -i 's/^bootlogo.*/bootlogo=true/' "${SDCARD}"/boot/testEnv.txt || echo 'bootlogo=true' >> "${SDCARD}"/boot/testEnv.txt
+		[[ -f "${SDCARD}"/boot/armbianEnv.txt ]] &&	grep -q '^bootlogo' "${SDCARD}"/boot/armbianEnv.txt && \
+		sed -i 's/^bootlogo.*/bootlogo=true/' "${SDCARD}"/boot/armbianEnv.txt || echo 'bootlogo=true' >> "${SDCARD}"/boot/armbianEnv.txt
 		[[ -f "${SDCARD}"/boot/boot.ini ]] &&	sed -i 's/^setenv bootlogo.*/setenv bootlogo "true"/' "${SDCARD}"/boot/boot.ini
 	fi
 	# enable additional services
@@ -1092,7 +1110,8 @@ repo-manipulate()
 
 		purge)
 			for release in "${DISTROS[@]}"; do
-				repo-remove-old-packages "$release" "riscv64" "5"
+				repo-remove-old-packages "$release" "armhf" "5"
+				repo-remove-old-packages "$release" "arm64" "5"
 				repo-remove-old-packages "$release" "amd64" "5"
 				repo-remove-old-packages "$release" "all" "5"
 				aptly -config="${SCRIPTPATH}config/${REPO_CONFIG}" -passphrase="${GPG_PASS}" publish update "${release}" > /dev/null 2>&1
@@ -1102,7 +1121,8 @@ repo-manipulate()
 
                 purgeedge)
                         for release in "${DISTROS[@]}"; do
-				repo-remove-old-packages "$release" "riscv64" "3" "edge"
+				repo-remove-old-packages "$release" "armhf" "3" "edge"
+				repo-remove-old-packages "$release" "arm64" "3" "edge"
 				repo-remove-old-packages "$release" "amd64" "3" "edge"
 				repo-remove-old-packages "$release" "all" "3" "edge"
 				aptly -config="${SCRIPTPATH}config/${REPO_CONFIG}" -passphrase="${GPG_PASS}" publish update "${release}" > /dev/null 2>&1
@@ -1381,31 +1401,24 @@ prepare_host()
 	build-essential  ca-certificates ccache cpio cryptsetup curl              \
 	debian-archive-keyring debian-keyring debootstrap device-tree-compiler    \
 	dialog dirmngr dosfstools dwarves f2fs-tools fakeroot flex gawk           \
-	gcc-riscv64-linux-gnu gdisk gpg busybox             \
-	imagemagick jq kmod libbison-dev libcrypto++-dev    \
+	gcc-arm-linux-gnueabi gcc-aarch64-linux-gnu gdisk gpg busybox             \
+	imagemagick jq kmod libbison-dev libc6-dev-armhf-cross libcrypto++-dev    \
 	libelf-dev libfdt-dev libfile-fcntllock-perl parallel libmpc-dev          \
 	libfl-dev liblz4-tool libncurses-dev libpython2.7-dev libssl-dev          \
 	libusb-1.0-0-dev linux-base locales lzop ncurses-base ncurses-term        \
 	nfs-kernel-server ntpdate p7zip-full parted patchutils pigz pixz          \
 	pkg-config pv python3-dev python3-distutils qemu-user-static rsync swig   \
 	systemd-container u-boot-tools udev unzip uuid-dev wget whiptail zip      \
-	zlib1g-dev"
+	zlib1g-dev zstd fdisk"
 
   if [[ $(dpkg --print-architecture) == amd64 ]]; then
 
 	hostdeps+=" distcc lib32ncurses-dev lib32stdc++6 libc6-i386"
 	grep -q i386 <(dpkg --print-foreign-architectures) || dpkg --add-architecture i386
 
-    if [[ $ARCH == "riscv64" ]]; then
+  elif [[ $(dpkg --print-architecture) == arm64 ]]; then
 
-        hostdeps+=" gcc-riscv64-linux-gnu libncurses5-dev \
-        qtbase5-dev schedtool zstd debian-ports-archive-keyring"
-
-    fi
-
-  elif [[ $(dpkg --print-architecture) == riscv64 ]]; then
-
-	hostdeps+="libc6 libc6-amd64-cross qemu"
+	hostdeps+="gcc-arm-none-eabi libc6 libc6-amd64-cross qemu"
 
   else
 
@@ -1518,7 +1531,7 @@ prepare_host()
 	fi
 	mkdir -p "${DEST}"/debs-beta/extra "${DEST}"/debs/extra "${DEST}"/{config,debug,patch} "${USERPATCHES_PATH}"/overlay "${SRC}"/cache/{sources,hash,hash-beta,toolchain,utility,rootfs} "${SRC}"/.tmp
 
-# build riscv64
+# build aarch64
 	if [[ $(dpkg --print-architecture) == amd64 ]]; then
 		if [[ "${SKIP_EXTERNAL_TOOLCHAINS}" != "yes" ]]; then
 
@@ -1531,13 +1544,41 @@ prepare_host()
 			display_alert "Checking for external GCC compilers" "" "info"
 			# download external Linaro compiler and missing special dependencies since they are needed for certain sources
 
-			local toolchain="${GITHUB_SOURCE}/chainsx/armbian-d1-build/releases/download/toolchain/Xuantie-900-gcc-linux-5.10.4-glibc-x86_64-V2.6.1-20220906.tar.gz"
-			if [[ ! -d ${SRC}/cache/toolchain/gcc-toolchain/ ]]; then
-			    wget ${toolchain} -O "${SRC}/cache/toolchain/toolchain.tar.gz"
-			    tar -zxf "${SRC}/cache/toolchain/toolchain.tar.gz" -C ${SRC}/cache/toolchain/
-			    rm -rf "${SRC}"/cache/toolchain/*.tar.gz*
-			    mv ${SRC}/cache/toolchain/* ${SRC}/cache/toolchain/gcc-toolchain/
-			fi
+			local toolchains=(
+				"${ARMBIAN_MIRROR}/_toolchain/gcc-linaro-aarch64-none-elf-4.8-2013.11_linux.tar.xz"
+				"${ARMBIAN_MIRROR}/_toolchain/gcc-linaro-arm-none-eabi-4.8-2014.04_linux.tar.xz"
+				"${ARMBIAN_MIRROR}/_toolchain/gcc-linaro-arm-linux-gnueabihf-4.8-2014.04_linux.tar.xz"
+				"${ARMBIAN_MIRROR}/_toolchain/gcc-linaro-7.4.1-2019.02-x86_64_arm-linux-gnueabi.tar.xz"
+				"${ARMBIAN_MIRROR}/_toolchain/gcc-linaro-7.4.1-2019.02-x86_64_aarch64-linux-gnu.tar.xz"
+				"${ARMBIAN_MIRROR}/_toolchains/gcc-arm-8.3-2019.03-x86_64-arm-linux-gnueabihf.tar.xz"
+				"${ARMBIAN_MIRROR}/_toolchains/gcc-arm-8.3-2019.03-x86_64-aarch64-linux-gnu.tar.xz"
+				"${ARMBIAN_MIRROR}/_toolchain/gcc-arm-9.2-2019.12-x86_64-arm-none-linux-gnueabihf.tar.xz"
+				"${ARMBIAN_MIRROR}/_toolchain/gcc-arm-9.2-2019.12-x86_64-aarch64-none-linux-gnu.tar.xz"
+				"${ARMBIAN_MIRROR}/_toolchain/gcc-arm-11.2-2022.02-x86_64-arm-none-linux-gnueabihf.tar.xz"
+				"${ARMBIAN_MIRROR}/_toolchain/gcc-arm-11.2-2022.02-x86_64-aarch64-none-linux-gnu.tar.xz"
+				)
+
+			USE_TORRENT_STATUS=${USE_TORRENT}
+			USE_TORRENT="no"
+			for toolchain in ${toolchains[@]}; do
+				download_and_verify "_toolchain" "${toolchain##*/}"
+			done
+			USE_TORRENT=${USE_TORRENT_STATUS}
+
+			rm -rf "${SRC}"/cache/toolchain/*.tar.xz*
+			local existing_dirs=( $(ls -1 "${SRC}"/cache/toolchain) )
+			for dir in ${existing_dirs[@]}; do
+				local found=no
+				for toolchain in ${toolchains[@]}; do
+					local filename=${toolchain##*/}
+					local dirname=${filename//.tar.xz}
+					[[ $dir == $dirname ]] && found=yes
+				done
+				if [[ $found == no ]]; then
+					display_alert "Removing obsolete toolchain" "$dir"
+					rm -rf "${SRC}/cache/toolchain/${dir}"
+				fi
+			done
 		else
 			display_alert "Ignoring toolchains" "SKIP_EXTERNAL_TOOLCHAINS: ${SKIP_EXTERNAL_TOOLCHAINS}" "info"
 		fi
@@ -1549,9 +1590,9 @@ prepare_host()
 	if [[ $KERNEL_ONLY != yes ]]; then
 		modprobe -q binfmt_misc
 		mountpoint -q /proc/sys/fs/binfmt_misc/ || mount binfmt_misc -t binfmt_misc /proc/sys/fs/binfmt_misc
-		if [[ "$(arch)" != "riscv64" ]]; then
+		if [[ "$(arch)" != "aarch64" ]]; then
 			test -e /proc/sys/fs/binfmt_misc/qemu-arm || update-binfmts --enable qemu-arm
-			test -e /proc/sys/fs/binfmt_misc/qemu-riscv64 || update-binfmts --enable qemu-riscv64
+			test -e /proc/sys/fs/binfmt_misc/qemu-aarch64 || update-binfmts --enable qemu-aarch64
 		fi
 	fi
 
@@ -1586,7 +1627,7 @@ function webseed ()
 	unset text
 	local CCODE=$(curl -s redirect.armbian.com/geoip | jq '.continent.code' -r)
 
-	if [[ "$2" == "rootfs" ]]; then
+	if [[ "$2" == rootfs* ]]; then
 		WEBSEED=($(curl -s ${1}mirrors | jq -r '.'${CCODE}' | .[] | values'))
 		else
 		WEBSEED=($(curl -s https://redirect.armbian.com/mirrors | jq -r '.'${CCODE}' | .[] | values'))
@@ -1615,6 +1656,9 @@ function webseed ()
 		)
 	fi
 
+	for toolchain in ${WEBSEED[@]}; do
+		text="${text} ${toolchain}"$2/"${3}"
+	done
 	text="${text:1}"
 	echo "${text}"
 }
@@ -1644,6 +1688,12 @@ download_and_verify()
 		return
 	fi
 
+	# rootfs has its own infra
+	if [[ "${remotedir}" == "_rootfs" ]]; then
+		local server="https://cache.armbian.com/"
+		remotedir="rootfs/$ROOTFSCACHE_VERSION"
+	fi
+
 	# switch to china mirror if US timeouts
 	timeout 10 curl --location --head --fail --silent ${server}${remotedir}/${filename} 2>&1 >/dev/null
 	if [[ $? -ne 7 && $? -ne 22 && $? -ne 0 ]]; then
@@ -1656,12 +1706,6 @@ download_and_verify()
 			display_alert "Timeout from $server" "retrying" "info"
 			server="https://mirrors.bfsu.edu.cn/armbian-releases/"
 		fi
-	fi
-
-	# rootfs has its own infra
-	if [[ "${remotedir}" == "_rootfs" ]]; then
-		local server="https://cache.armbian.com/"
-		remotedir="rootfs"
 	fi
 
 	# check if file exists on remote server before running aria2 downloader
@@ -1711,7 +1755,7 @@ download_and_verify()
 	if [[ ! -f "${localdir}/${filename}.complete" ]]; then
 		if [[ ! `timeout 10 curl --location --head --fail --silent ${server}${remotedir}/${filename} 2>&1 >/dev/null` ]]; then
 			display_alert "downloading using http(s) network" "$filename"
-			aria2c --download-result=hide --rpc-save-upload-metadata=false --console-log-level=error \
+			aria2c --allow-overwrite=true --download-result=hide --rpc-save-upload-metadata=false --console-log-level=error \
 			--dht-file-path="${SRC}"/cache/.aria2/dht.dat --disable-ipv6=$DISABLE_IPV6 --summary-interval=0 --auto-file-renaming=false --dir="${localdir}" ${server}${remotedir}/${filename} $(webseed "${server}" "${remotedir}" "${filename}") -o "${filename}"
 			# mark complete
 			[[ $? -eq 0 ]] && touch "${localdir}/${filename}.complete" && echo ""

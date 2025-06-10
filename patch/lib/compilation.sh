@@ -11,11 +11,12 @@
 
 # Functions:
 
-# compile_opensbi
+# compile_atf
 # compile_uboot
 # compile_kernel
 # compile_firmware
 # compile_armbian-config
+# compile_xilinx_bootgen
 # grab_version
 # find_toolchain
 # advanced_patch
@@ -23,67 +24,95 @@
 # userpatch_create
 # overlayfs_wrapper
 
-compile_opensbi()
+
+
+
+compile_atf()
 {
 	if [[ $CLEAN_LEVEL == *make* ]]; then
-		display_alert "Cleaning" "$OPENSBISOURCEDIR" "info"
-		(cd "${SRC}/cache/sources/${OPENSBISOURCEDIR}"; make distclean > /dev/null 2>&1)
+		display_alert "Cleaning" "$ATFSOURCEDIR" "info"
+		(cd "${SRC}/cache/sources/${ATFSOURCEDIR}"; make distclean > /dev/null 2>&1)
 	fi
 
 	if [[ $USE_OVERLAYFS == yes ]]; then
-		local opensbidir
-		opensbidir=$(overlayfs_wrapper "wrap" "$SRC/cache/sources/$OPENSBISOURCEDIR" "opensbi_${LINUXFAMILY}_${BRANCH}")
+		local atfdir
+		atfdir=$(overlayfs_wrapper "wrap" "$SRC/cache/sources/$ATFSOURCEDIR" "atf_${LINUXFAMILY}_${BRANCH}")
 	else
-		local opensbidir="$SRC/cache/sources/$OPENSBISOURCEDIR"
+		local atfdir="$SRC/cache/sources/$ATFSOURCEDIR"
 	fi
-	cd "$opensbidir" || exit
+	cd "$atfdir" || exit
 
-	display_alert "Compiling opensbi" "" "info"
+	display_alert "Compiling ATF" "" "info"
 
-# build riscv64
-  if [[ $(dpkg --print-architecture) == amd64 ]] | [[ $(dpkg --print-architecture) == riscv64 ]] ; then
+# build aarch64
+  if [[ $(dpkg --print-architecture) == amd64 ]]; then
 
 	local toolchain
-	toolchain=$(find_toolchain "$OPENSBI_COMPILER" "$OPENSBI_USE_GCC")
-	[[ -z $toolchain ]] && exit_with_error "Could not find required toolchain" "${OPENSBI_COMPILER}gcc $OPENSBI_USE_GCC"
+	toolchain=$(find_toolchain "$ATF_COMPILER" "$ATF_USE_GCC")
+	[[ -z $toolchain ]] && exit_with_error "Could not find required toolchain" "${ATF_COMPILER}gcc $ATF_USE_GCC"
 
-# build riscv64
+	if [[ -n $ATF_TOOLCHAIN2 ]]; then
+		local toolchain2_type toolchain2_ver toolchain2
+		toolchain2_type=$(cut -d':' -f1 <<< "${ATF_TOOLCHAIN2}")
+		toolchain2_ver=$(cut -d':' -f2 <<< "${ATF_TOOLCHAIN2}")
+		toolchain2=$(find_toolchain "$toolchain2_type" "$toolchain2_ver")
+		[[ -z $toolchain2 ]] && exit_with_error "Could not find required toolchain" "${toolchain2_type}gcc $toolchain2_ver"
+	fi
+
+# build aarch64
   fi
 
-	display_alert "Compiler version" "${OPENSBI_COMPILER}gcc $(eval env PATH="${toolchain}:${PATH}" "${OPENSBI_COMPILER}gcc" -dumpversion)" "info"
+	display_alert "Compiler version" "${ATF_COMPILER}gcc $(eval env PATH="${toolchain}:${PATH}" "${ATF_COMPILER}gcc" -dumpversion)" "info"
 
 	local target_make target_patchdir target_files
-	target_make=$(cut -d';' -f1 <<< "${OPENSBI_TARGET_MAP}")
-	target_patchdir=$(cut -d';' -f2 <<< "${OPENSBI_TARGET_MAP}")
-	target_files=$(cut -d';' -f3 <<< "${OPENSBI_TARGET_MAP}")
+	target_make=$(cut -d';' -f1 <<< "${ATF_TARGET_MAP}")
+	target_patchdir=$(cut -d';' -f2 <<< "${ATF_TARGET_MAP}")
+	target_files=$(cut -d';' -f3 <<< "${ATF_TARGET_MAP}")
 
-	advanced_patch "opensbi" "${OPENSBIPATCHDIR}" "$BOARD" "$target_patchdir" "$BRANCH" "${LINUXFAMILY}-${BOARD}-${BRANCH}"
+	advanced_patch "atf" "${ATFPATCHDIR}" "$BOARD" "$target_patchdir" "$BRANCH" "${LINUXFAMILY}-${BOARD}-${BRANCH}"
 
 	# create patch for manual source changes
-	[[ $CREATE_PATCHES == yes ]] && userpatch_create "opensbi"
+	[[ $CREATE_PATCHES == yes ]] && userpatch_create "atf"
 
-	echo -e "\n\t==  opensbi  ==\n" >> "${DEST}"/${LOG_SUBPATH}/compilation.log
-	# ENABLE_BACKTRACE="0" has been added to workaround a regression in opensbi.
-	eval CCACHE_BASEDIR="$(pwd)" env PATH="${toolchain}:${PATH}" \
-		'make PLATFORM=generic FW_PIC=y \
-		CROSS_COMPILE="$CCACHE $OPENSBI_COMPILER"' 2>> "${DEST}"/${LOG_SUBPATH}/compilation.log \
+	echo -e "\n\t==  atf  ==\n" >> "${DEST}"/${LOG_SUBPATH}/compilation.log
+	# ENABLE_BACKTRACE="0" has been added to workaround a regression in ATF.
+	# Check: https://github.com/armbian/build/issues/1157
+	eval CCACHE_BASEDIR="$(pwd)" env PATH="${toolchain}:${toolchain2}:${PATH}" \
+		'make ENABLE_BACKTRACE="0" $target_make $CTHREADS \
+		CROSS_COMPILE="$CCACHE $ATF_COMPILER"' 2>> "${DEST}"/${LOG_SUBPATH}/compilation.log \
 		${PROGRESS_LOG_TO_FILE:+' | tee -a $DEST/${LOG_SUBPATH}/compilation.log'} \
-		${OUTPUT_DIALOG:+' | dialog --backtitle "$backtitle" --progressbox "Compiling OPENSBI..." $TTY_Y $TTY_X'} \
+		${OUTPUT_DIALOG:+' | dialog --backtitle "$backtitle" --progressbox "Compiling ATF..." $TTY_Y $TTY_X'} \
 		${OUTPUT_VERYSILENT:+' >/dev/null 2>/dev/null'}
 
-	[[ ${PIPESTATUS[0]} -ne 0 ]] && exit_with_error "opensbi compilation failed"
+	[[ ${PIPESTATUS[0]} -ne 0 ]] && exit_with_error "ATF compilation failed"
 
-	[[ $(type -t OPENSBI_custom_postprocess) == function ]] && OPENSBI_custom_postprocess
+	[[ $(type -t atf_custom_postprocess) == function ]] && atf_custom_postprocess
 
-	opensbitempdir=$(mktemp -d)
-	chmod 700 ${opensbitempdir}
-	trap "ret=\$?; rm -rf \"${opensbitempdir}\" ; exit \$ret" 0 1 2 3 15
+	atftempdir=$(mktemp -d)
+	chmod 700 ${atftempdir}
+	trap "ret=\$?; rm -rf \"${atftempdir}\" ; exit \$ret" 0 1 2 3 15
 
-	f_src="${opensbidir}/build/platform/generic/firmware/fw_dynamic.bin"
-	[[ ! -f $f_src ]] && exit_with_error "opensbi file not found ${f_src}"
-	cp ${opensbidir}/build/platform/generic/firmware/fw_dynamic.bin $SRC/cache/sources/
+	# copy files to temp directory
+	for f in $target_files; do
+		local f_src
+		f_src=$(cut -d':' -f1 <<< "${f}")
+		if [[ $f == *:* ]]; then
+			local f_dst
+			f_dst=$(cut -d':' -f2 <<< "${f}")
+		else
+			local f_dst
+			f_dst=$(basename "${f_src}")
+		fi
+		[[ ! -f $f_src ]] && exit_with_error "ATF file not found" "$(basename "${f_src}")"
+		cp "${f_src}" "${atftempdir}/${f_dst}"
+	done
 
+	# copy license file to pack it to u-boot package later
+	[[ -f license.md ]] && cp license.md "${atftempdir}"/
 }
+
+
+
 
 compile_uboot()
 {
@@ -108,16 +137,12 @@ compile_uboot()
 
 	display_alert "Compiling u-boot" "$version" "info"
 
-# build riscv64
-  if [[ $(dpkg --print-architecture) == amd64 ]] | [[ $(dpkg --print-architecture) == riscv64 ]]; then
+# build aarch64
+  if [[ $(dpkg --print-architecture) == amd64 ]]; then
 
 	local toolchain
-	if [[ $ARCH = "riscv64" ]]; then
-		toolchain=$UBOOT_COMPILER
-    	else
-    		toolchain=$(find_toolchain "$UBOOT_COMPILER" "$UBOOT_USE_GCC")
-    		[[ -z $toolchain ]] && exit_with_error "Could not find required toolchain" "${UBOOT_COMPILER}gcc $UBOOT_USE_GCC"
-	fi
+	toolchain=$(find_toolchain "$UBOOT_COMPILER" "$UBOOT_USE_GCC")
+	[[ -z $toolchain ]] && exit_with_error "Could not find required toolchain" "${UBOOT_COMPILER}gcc $UBOOT_USE_GCC"
 
 	if [[ -n $UBOOT_TOOLCHAIN2 ]]; then
 		local toolchain2_type toolchain2_ver toolchain2
@@ -127,7 +152,7 @@ compile_uboot()
 		[[ -z $toolchain2 ]] && exit_with_error "Could not find required toolchain" "${toolchain2_type}gcc $toolchain2_ver"
 	fi
 
-# build riscv64
+# build aarch64
   fi
 
 	display_alert "Compiler version" "${UBOOT_COMPILER}gcc $(eval env PATH="${toolchain}:${toolchain2}:${PATH}" "${UBOOT_COMPILER}gcc" -dumpversion)" "info"
@@ -162,11 +187,12 @@ compile_uboot()
 		# create patch for manual source changes
 		[[ $CREATE_PATCHES == yes ]] && userpatch_create "u-boot"
 
-		#if [[ -n $OPENSBISOURCE ]]; then
-		#	cp -Rv "${opensbitempdir}"/*.bin .
-		#	cp -Rv "${opensbitempdir}"/*.elf .
-		#	rm -rf "${opensbitempdir}"
-		#fi
+		if [[ -n $ATFSOURCE ]]; then
+			cp -Rv "${atftempdir}"/*.bin . 2>/dev/null || \
+			cp -Rv "${atftempdir}"/*.elf . 2>/dev/null
+			[[ $? -ne 0 ]] && exit_with_error "ATF binary not found"
+			rm -rf "${atftempdir}"
+		fi
 
 		echo -e "\n\t== u-boot make $BOOTCONFIG ==\n" >> "${DEST}"/${LOG_SUBPATH}/compilation.log
 		eval CCACHE_BASEDIR="$(pwd)" env PATH="${toolchain}:${toolchain2}:${PATH}" \
@@ -201,25 +227,18 @@ compile_uboot()
 		[[ -n $BOOTDELAY ]] && sed -i "s/^CONFIG_BOOTDELAY=.*/CONFIG_BOOTDELAY=${BOOTDELAY}/" .config || [[ -f .config ]] && echo "CONFIG_BOOTDELAY=${BOOTDELAY}" >> .config
 
 		# workaround when two compilers are needed
-		cross_compile="CROSS_COMPILE=$UBOOT_COMPILER";
+		cross_compile="CROSS_COMPILE=$CCACHE $UBOOT_COMPILER";
 		[[ -n $UBOOT_TOOLCHAIN2 ]] && cross_compile="ARMBIAN=foe"; # empty parameter is not allowed
 
 		echo -e "\n\t== u-boot make $target_make ==\n" >> "${DEST}"/${LOG_SUBPATH}/compilation.log
 		eval CCACHE_BASEDIR="$(pwd)" env PATH="${toolchain}:${toolchain2}:${PATH}" \
 			'make $target_make $CTHREADS \
-			"${cross_compile}" OPENSBI=$SRC/cache/sources/fw_dynamic.bin' 2>>"${DEST}"/${LOG_SUBPATH}/compilation.log \
+			"${cross_compile}"' 2>>"${DEST}"/${LOG_SUBPATH}/compilation.log \
 			${PROGRESS_LOG_TO_FILE:+' | tee -a "${DEST}"/${LOG_SUBPATH}/compilation.log'} \
 			${OUTPUT_DIALOG:+' | dialog --backtitle "$backtitle" --progressbox "Compiling u-boot..." $TTY_Y $TTY_X'} \
 			${OUTPUT_VERYSILENT:+' >/dev/null 2>/dev/null'} ';EVALPIPE=(${PIPESTATUS[@]})'
 
 		[[ ${EVALPIPE[0]} -ne 0 ]] && exit_with_error "U-boot compilation failed"
-
-
-		u_src="u-boot-sunxi-with-spl.bin"
-		[[ ! -f $u_src ]] && u_src="u-boot-with-spl.bin"
-
-	    [[ ! -f $u_src ]] && exit_with_error "u-boot with spl file not found ${u_src}"
-		cp u-boot*with-spl.bin $SRC/cache/sources
 
 		[[ $(type -t uboot_custom_postprocess) == function ]] && uboot_custom_postprocess
 
@@ -293,12 +312,12 @@ compile_uboot()
 	# copy license files from typical locations
 	[[ -f COPYING ]] && cp COPYING "$uboottempdir/${uboot_name}/usr/lib/u-boot/LICENSE"
 	[[ -f Licenses/README ]] && cp Licenses/README "$uboottempdir/${uboot_name}/usr/lib/u-boot/LICENSE"
-	[[ -n $opensbitempdir && -f $opensbitempdir/license.md ]] && cp "${opensbitempdir}/license.md" "$uboottempdir/${uboot_name}/usr/lib/u-boot/LICENSE.atf"
+	[[ -n $atftempdir && -f $atftempdir/license.md ]] && cp "${atftempdir}/license.md" "$uboottempdir/${uboot_name}/usr/lib/u-boot/LICENSE.atf"
 
 	display_alert "Building deb" "${uboot_name}.deb" "info"
 	fakeroot dpkg-deb -b -Z${DEB_COMPRESS} "$uboottempdir/${uboot_name}" "$uboottempdir/${uboot_name}.deb" >> "${DEST}"/${LOG_SUBPATH}/output.log 2>&1
 	rm -rf "$uboottempdir/${uboot_name}"
-	[[ -n $opensbitempdir ]] && rm -rf "${opensbitempdir}"
+	[[ -n $atftempdir ]] && rm -rf "${atftempdir}"
 
 	[[ ! -f $uboottempdir/${uboot_name}.deb ]] && exit_with_error "Building u-boot package failed"
 
@@ -398,12 +417,10 @@ compile_kernel()
 	# if it matches we use the system compiler
 	if $(dpkg-architecture -e "${ARCH}"); then
 		display_alert "Native compilation"
-	elif [[ $(dpkg --print-architecture) == amd64 ]] || [[ $(dpkg --print-architecture) == riscv64 ]]; then
-	        if [[ $ARCH != "riscv64" ]]; then
-    			local toolchain
-    			toolchain=$(find_toolchain "$KERNEL_COMPILER" "$KERNEL_USE_GCC")
-    			[[ -z $toolchain ]] && exit_with_error "Could not find required toolchain" "${KERNEL_COMPILER}gcc $KERNEL_USE_GCC"
-    		fi
+	elif [[ $(dpkg --print-architecture) == amd64 ]]; then
+		local toolchain
+		toolchain=$(find_toolchain "$KERNEL_COMPILER" "$KERNEL_USE_GCC")
+		[[ -z $toolchain ]] && exit_with_error "Could not find required toolchain" "${KERNEL_COMPILER}gcc $KERNEL_USE_GCC"
 	else
 		exit_with_error "Architecture [$ARCH] is not supported"
 	fi
@@ -430,6 +447,16 @@ Called after ${LINUXCONFIG}.config is put in place (.config).
 Before any olddefconfig any Kconfig make is called.
 A good place to customize the .config directly.
 CUSTOM_KERNEL_CONFIG
+
+
+	# hack for OdroidXU4. Copy firmare files
+	if [[ $BOARD == odroidxu4 ]]; then
+		mkdir -p "${kerneldir}/firmware/edid"
+		cp "${SRC}"/packages/blobs/odroidxu4/*.bin "${kerneldir}/firmware/edid"
+	fi
+
+	# hack for deb builder. To pack what's missing in headers pack.
+	cp "${SRC}"/patch/misc/headers-debian-byteshift.patch /tmp
 
 	if [[ $KERNEL_CONFIGURE != yes ]]; then
 		if [[ $BRANCH == default ]]; then
@@ -557,6 +584,9 @@ CUSTOM_KERNEL_CONFIG
 
 }
 
+
+
+
 compile_firmware()
 {
 	display_alert "Merging and packaging linux firmware" "@host" "info"
@@ -607,6 +637,9 @@ compile_firmware()
 	# remove temp directory
 	rm -rf "${firmwaretempdir}"
 }
+
+
+
 
 compile_armbian-zsh()
 {
@@ -681,6 +714,9 @@ compile_armbian-zsh()
 
 }
 
+
+
+
 compile_armbian-config()
 {
 
@@ -692,6 +728,8 @@ compile_armbian-config()
 	display_alert "Building deb" "armbian-config" "info"
 
 	fetch_from_repo "$GITHUB_SOURCE/armbian/config" "armbian-config" "branch:master"
+	fetch_from_repo "$GITHUB_SOURCE/dylanaraps/neofetch" "neofetch" "tag:7.1.0"
+	fetch_from_repo "$GITHUB_SOURCE/complexorganizations/wireguard-manager" "wireguard-manager" "tag:v1.0.0.10-26-2021"
 
 	mkdir -p "${tmp_dir}/${armbian_config_dir}"/{DEBIAN,usr/bin/,usr/sbin/,usr/lib/armbian-config/}
 
@@ -701,7 +739,7 @@ compile_armbian-config()
 	Version: $REVISION
 	Architecture: all
 	Maintainer: $MAINTAINER <$MAINTAINERMAIL>
-	Replaces: armbian-bsp
+	Replaces: armbian-bsp, neofetch
 	Depends: bash, iperf3, psmisc, curl, bc, expect, dialog, pv, zip, \
 	debconf-utils, unzip, build-essential, html2text, html2text, dirmngr, software-properties-common, debconf, jq
 	Recommends: armbian-bsp
@@ -711,6 +749,11 @@ compile_armbian-config()
 	Description: Armbian configuration utility
 	END
 
+	install -m 755 "${SRC}"/cache/sources/neofetch/neofetch "${tmp_dir}/${armbian_config_dir}"/usr/bin/neofetch
+	cd "${tmp_dir}/${armbian_config_dir}"/usr/bin/
+	process_patch_file "${SRC}/patch/misc/add-armbian-neofetch.patch" "applying"
+
+	install -m 755 "${SRC}"/cache/sources/wireguard-manager/wireguard-manager.sh "${tmp_dir}/${armbian_config_dir}"/usr/bin/wireguard-manager
 	install -m 755 "${SRC}"/cache/sources/armbian-config/scripts/tv_grab_file "${tmp_dir}/${armbian_config_dir}"/usr/bin/tv_grab_file
 	install -m 755 "${SRC}"/cache/sources/armbian-config/debian-config "${tmp_dir}/${armbian_config_dir}"/usr/sbin/armbian-config
 	install -m 644 "${SRC}"/cache/sources/armbian-config/debian-config-jobs "${tmp_dir}/${armbian_config_dir}"/usr/lib/armbian-config/jobs.sh
@@ -725,6 +768,87 @@ compile_armbian-config()
 	fakeroot dpkg-deb -b -Z${DEB_COMPRESS} "${tmp_dir}/${armbian_config_dir}" >/dev/null
 	rsync --remove-source-files -rq "${tmp_dir}/${armbian_config_dir}.deb" "${DEB_STORAGE}/"
 	rm -rf "${tmp_dir}"
+}
+
+
+
+
+compile_plymouth-theme-armbian()
+{
+
+	local tmp_dir work_dir
+	tmp_dir=$(mktemp -d)
+	chmod 700 ${tmp_dir}
+	trap "ret=\$?; rm -rf \"${tmp_dir}\" ; exit \$ret" 0 1 2 3 15
+	plymouth_theme_armbian_dir=armbian-plymouth-theme_${REVISION}_all
+	display_alert "Building deb" "armbian-plymouth-theme" "info"
+
+	mkdir -p "${tmp_dir}/${plymouth_theme_armbian_dir}"/{DEBIAN,usr/share/plymouth/themes/armbian}
+
+	# set up control file
+	cat <<-END > "${tmp_dir}/${plymouth_theme_armbian_dir}"/DEBIAN/control
+	Package: armbian-plymouth-theme
+	Version: $REVISION
+	Architecture: all
+	Maintainer: $MAINTAINER <$MAINTAINERMAIL>
+	Depends: plymouth, plymouth-themes
+	Section: universe/x11
+	Priority: optional
+	Description: boot animation, logger and I/O multiplexer - armbian theme
+	END
+
+	cp "${SRC}"/packages/plymouth-theme-armbian/debian/{postinst,prerm,postrm} \
+		"${tmp_dir}/${plymouth_theme_armbian_dir}"/DEBIAN/
+	chmod 755 "${tmp_dir}/${plymouth_theme_armbian_dir}"/DEBIAN/{postinst,prerm,postrm}
+
+	convert -resize 256x256 \
+		"${SRC}"/packages/plymouth-theme-armbian/armbian-logo.png \
+		"${tmp_dir}/${plymouth_theme_armbian_dir}"/usr/share/plymouth/themes/armbian/bgrt-fallback.png
+
+	# convert -resize 52x52 \
+	# 	"${SRC}"/packages/plymouth-theme-armbian/spinner.gif \
+	# 	"${tmp_dir}/${plymouth_theme_armbian_dir}"/usr/share/plymouth/themes/armbian/animation-%04d.png
+
+	convert -resize 52x52 \
+		"${SRC}"/packages/plymouth-theme-armbian/spinner.gif \
+		"${tmp_dir}/${plymouth_theme_armbian_dir}"/usr/share/plymouth/themes/armbian/throbber-%04d.png
+
+	cp "${SRC}"/packages/plymouth-theme-armbian/watermark.png \
+		"${tmp_dir}/${plymouth_theme_armbian_dir}"/usr/share/plymouth/themes/armbian/
+
+	cp "${SRC}"/packages/plymouth-theme-armbian/{bullet,capslock,entry,keyboard,keymap-render,lock}.png \
+		"${tmp_dir}/${plymouth_theme_armbian_dir}"/usr/share/plymouth/themes/armbian/
+
+	cp "${SRC}"/packages/plymouth-theme-armbian/armbian.plymouth \
+		"${tmp_dir}/${plymouth_theme_armbian_dir}"/usr/share/plymouth/themes/armbian/
+
+	fakeroot dpkg-deb -b -Z${DEB_COMPRESS} "${tmp_dir}/${plymouth_theme_armbian_dir}" >/dev/null
+	rsync --remove-source-files -rq "${tmp_dir}/${plymouth_theme_armbian_dir}.deb" "${DEB_STORAGE}/"
+	rm -rf "${tmp_dir}"
+}
+
+
+
+
+compile_xilinx_bootgen()
+{
+	# Source code checkout
+	(fetch_from_repo "$GITHUB_SOURCE/Xilinx/bootgen.git" "xilinx-bootgen" "branch:master")
+
+	pushd "${SRC}"/cache/sources/xilinx-bootgen || exit
+
+	# Compile and install only if git commit hash changed
+	# need to check if /usr/local/bin/bootgen to detect new Docker containers with old cached sources
+	if [[ ! -f .commit_id || $(improved_git rev-parse @ 2>/dev/null) != $(<.commit_id) || ! -f /usr/local/bin/bootgen ]]; then
+		display_alert "Compiling" "xilinx-bootgen" "info"
+		make -s clean >/dev/null
+		make -s -j$(nproc) bootgen >/dev/null
+		mkdir -p /usr/local/bin/
+		install bootgen /usr/local/bin >/dev/null 2>&1
+		improved_git rev-parse @ 2>/dev/null > .commit_id
+	fi
+
+	popd
 }
 
 grab_version()

@@ -71,7 +71,7 @@ source "${SRC}"/lib/distributions.sh                        # system specific in
 # shellcheck source=desktop.sh
 source "${SRC}"/lib/desktop.sh                              # desktop specific install
 # shellcheck source=compilation.sh
-source "${SRC}"/lib/compilation.sh                          # patching and compilation of kernel, uboot, opensbi
+source "${SRC}"/lib/compilation.sh                          # patching and compilation of kernel, uboot, ATF
 # shellcheck source=compilation-prepare.sh
 source "${SRC}"/lib/compilation-prepare.sh                  # drivers that are not upstreamed
 # shellcheck source=makeboarddeb.sh
@@ -171,7 +171,7 @@ if [[ -z $KERNEL_CONFIGURE ]]; then
 
 	options+=("no" "Do not change the kernel configuration")
 	options+=("yes" "Show a kernel configuration menu before compilation")
-	options+=("prebuilt" "Unsupported to use precompiled packages from Armbian repository")
+	options+=("prebuilt" "Use precompiled packages from Armbian repository")
 	KERNEL_CONFIGURE=$(dialog --stdout --title "Choose an option" --backtitle "$backtitle" --no-tags \
 	--menu "Select the kernel configuration" $TTY_Y $TTY_X $((TTY_Y - 8)) "${options[@]}")
 	unset options
@@ -322,9 +322,9 @@ if [[ $KERNEL_ONLY != yes && -z $RELEASE ]]; then
 fi
 
 # don't show desktop option if we choose minimal build
-[[ $BUILD_MINIMAL == yes ]] && BUILD_DESKTOP=no
-
-if [[ $KERNEL_ONLY != yes && -z $BUILD_DESKTOP ]]; then
+if [[ $HAS_VIDEO_OUTPUT == no || $BUILD_MINIMAL == yes ]]; then
+	BUILD_DESKTOP=no
+elif [[ $KERNEL_ONLY != yes && -z $BUILD_DESKTOP ]]; then
 
 	# read distribution support status which is written to the armbian-release file
 	set_distribution_status
@@ -411,7 +411,7 @@ branch2dir() {
 
 BOOTSOURCEDIR="${BOOTDIR}/$(branch2dir "${BOOTBRANCH}")"
 LINUXSOURCEDIR="${KERNELDIR}/$(branch2dir "${KERNELBRANCH}")"
-[[ -n $OPENSBISOURCE ]] && OPENSBISOURCEDIR="${OPENSBIDIR}/$(branch2dir "${OPENSBIBRANCH}")"
+[[ -n $ATFSOURCE ]] && ATFSOURCEDIR="${ATFDIR}/$(branch2dir "${ATFBRANCH}")"
 
 BSP_CLI_PACKAGE_NAME="armbian-bsp-cli-${BOARD}${EXTRA_BSP_NAME}"
 BSP_CLI_PACKAGE_FULLNAME="${BSP_CLI_PACKAGE_NAME}_${REVISION}_${ARCH}"
@@ -442,7 +442,7 @@ prepare_host
 if [[ $IGNORE_UPDATES != yes ]]; then
 	display_alert "Downloading sources" "" "info"
 	[[ -n $BOOTSOURCE ]] && fetch_from_repo "$BOOTSOURCE" "$BOOTDIR" "$BOOTBRANCH" "yes"
-	[[ -n $OPENSBISOURCE ]] && fetch_from_repo "$OPENSBISOURCE" "$OPENSBIDIR" "$OPENSBIBRANCH" "yes"
+	[[ -n $ATFSOURCE ]] && fetch_from_repo "$ATFSOURCE" "$ATFDIR" "$ATFBRANCH" "yes"
 
 	if [[ -n $KERNELSOURCE ]]; then
 		if $(declare -f var_origin_kernel >/dev/null); then
@@ -475,8 +475,8 @@ fi
 [[ "${BOOTCONFIG}" != "none" ]] && {
 	# Compile u-boot if packed .deb does not exist or use the one from repository
 	if [[ ! -f "${DEB_STORAGE}"/${CHOSEN_UBOOT}_${REVISION}_${ARCH}.deb ]]; then
-		if [[ -n "${OPENSBISOURCE}" && "${REPOSITORY_INSTALL}" != *u-boot* ]]; then
-			compile_opensbi
+		if [[ -n "${ATFSOURCE}" && "${REPOSITORY_INSTALL}" != *u-boot* ]]; then
+			compile_atf
 		fi
 		[[ "${REPOSITORY_INSTALL}" != *u-boot* ]] && compile_uboot
 	fi
@@ -501,6 +501,13 @@ fi
 if [[ ! -f ${DEB_STORAGE}/armbian-zsh_${REVISION}_all.deb ]]; then
 
         [[ "${REPOSITORY_INSTALL}" != *armbian-zsh* ]] && compile_armbian-zsh
+
+fi
+
+# Compile plymouth-theme-armbian if packed .deb does not exist or use the one from repository
+if [[ ! -f ${DEB_STORAGE}/plymouth-theme-armbian_${REVISION}_all.deb ]]; then
+
+        [[ "${REPOSITORY_INSTALL}" != *plymouth-theme-armbian* ]] && compile_plymouth-theme-armbian
 
 fi
 
