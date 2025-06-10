@@ -25,7 +25,6 @@ jobs:
       - name: Checkout armbian
         run: |
            git clone --depth=1 --branch=main https://github.com/soulteary/armbian-build-s805.git build 
-
       - name: "Checkout current repository"
         uses: actions/checkout@v4
         with:
@@ -44,17 +43,22 @@ jobs:
         run: |
           cd build
           # Don't update remote cache
-          sudo ./compile.sh BOARD=onecloud BRANCH=current RELEASE=bookworm BUILD_MINIMAL=yes BUILD_DESKTOP=no KERNEL_ONLY=no KERNEL_CONFIGURE=no COMPRESS_OUTPUTIMAGE=sha,gpg,img DOWNLOAD_MIRROR=china MAINLINE_MIRROR=tuna EXTRAWIFI=no
+          sudo ./compile.sh BOARD=onecloud BRANCH=edge RELEASE=bookworm BUILD_MINIMAL=yes BUILD_DESKTOP=no KERNEL_ONLY=no KERNEL_CONFIGURE=no COMPRESS_OUTPUTIMAGE=sha,gpg,img DOWNLOAD_MIRROR=china MAINLINE_MIRROR=tuna EXTRAWIFI=no
           sudo chown $(id -u):$(id -g) -R output/
-
       - name: Install Dependents
         run: |
           sudo apt install img2simg
           ver="v0.3.1"
+          curl -L -o ./AmlImg https://github.com/hzyitc/AmlImg/releases/download/v0.3.1/AmlImg_v0.3.1_linux_amd64
           chmod +x ./AmlImg
       - name: Download and unpack the latest u-boot
         run: |
+          echo "::group::Download"
+          curl -L -o ./uboot.img https://github.com/hzyitc/u-boot-onecloud/releases/download/build-20221028-0940/eMMC.burn.img
+          echo "::endgroup::"
+          echo "::group::Unpack"
           ./AmlImg unpack ./uboot.img burn/
+          echo "::endgroup::"
       - name: Extract boot and rootfs partitions
         run: |
           diskimg=$(ls build/output/images/*.img)
@@ -73,30 +77,25 @@ jobs:
           PARTITION:rootfs:sparse:rootfs.simg
           VERIFY:rootfs:normal:rootfs.VERIFY
           EOF
-          prefix=$(ls ./build/output/images/*.img | sed 's/\.img$//')
+          prefix=$(ls build/output/images/*.img | sed 's/\.img$//')
           burnimg=${prefix}.burn.img
           ./AmlImg pack $burnimg burn/
       - name: Hash and compress images
         run: |
-          for f in ./build/output/images/*.img; do
+          for f in build/output/images/*.img; do
             sha256sum "$f" | tee -a sha256sum
             xz --threads=0 --compress "$f"
           done
-      - name: Create Release Tag
-        if: env.UPLOAD_RELEASE == 'true'
+      - name: Generate release informations
         run: |
-          echo "release_tag=$(date +%Y%m%d)" >> $GITHUB_ENV
-      - name: Upload artifacts
-        if: env.UPLOAD_ARTIFACTS == 'true'
-        uses: actions/upload-artifact@main
-        with:
-          name: armbian-image
-          path: ./build/output/images/*.xz
-
+          cat <<EOF | sed -E 's/^  //' | tee Release.md
+            $(cat sha256sum | awk '{printf "%s: `%s`\n", $2, $1}')
+          EOF
       - name: Upload to release
-        if: env.UPLOAD_RELEASE == 'true'
-        uses: softprops/action-gh-release@v2.1.0
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.release_tag }}
-          name: Armbian ${{ env.release_tag }}
-          files: ./build/output/images/*.xz
+          tag_name: Armbian_Onecloud_jammy_5.9.0-docker
+          append_body: true
+          body_path: Release.md
+          files: |
+            build/output/images/*
