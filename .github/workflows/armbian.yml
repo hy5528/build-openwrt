@@ -40,12 +40,12 @@ jobs:
           sudo apt-get install -y git build-essential debootstrap
       - name: Build Armbian
         run: |
-          git clone --depth=1 --branch=v23.02 https://github.com/armbian/build.git build 
+          git clone --depth=1 --branch=v24.50 https://github.com/armbian/build.git build 
           cd build
           ./compile.sh \
           BOARD=onecloud \
-          BRANCH=current \
-          RELEASE=jammy \
+          BRANCH=legacy \
+          RELEASE=bookworm \
           BUILD_MINIMAL=no \
           BUILD_DESKTOP=no \
           KERNEL_CONFIGURE=no
