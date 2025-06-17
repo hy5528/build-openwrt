@@ -45,8 +45,8 @@ jobs:
           mkdir -p build/output/images
           chmod -R 777 build
           cd build/output/images
-          wget https://github.com/SLAzurin/build-armbian-custom/releases/download/v2021.11-s8xx/Armbian_21.11.0-trunk_Aml-s812_focal_current_5.14.0.img.xz
-          unxz Armbian_21.11.0-trunk_Aml-s812_focal_current_5.14.0.img.xz
+          wget https://github.com/soulteary/armbian-build-s805/releases/download/2025.01.10/Armbian-unofficial_25.02.0-trunk_Onecloud_noble_edge_6.10.14.img.xz
+          unxz Armbian-unofficial_25.02.0-trunk_Onecloud_noble_edge_6.10.14.img.xz
           
       - name: Install Dependents
         run: |
