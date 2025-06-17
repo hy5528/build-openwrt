@@ -45,8 +45,8 @@ jobs:
           mkdir -p build/output/images
           chmod -R 777 build
           cd build/output/images
-          wget https://github.com/soulteary/armbian-build-s805/releases/download/2025.01.10/Armbian-unofficial_25.02.0-trunk_Onecloud_noble_edge_6.10.14.img.xz
-          unxz Armbian-unofficial_25.02.0-trunk_Onecloud_noble_edge_6.10.14.img.xz
+          wget https://github.com/hzyitc/armbian-onecloud/releases/download/ci-20240303-152513-UTC/Armbian-unofficial_24.5.0-trunk_Onecloud_jammy_current_6.6.20.img.xz
+          unxz Armbian-unofficial_24.5.0-trunk_Onecloud_jammy_current_6.6.20.img.xz
           
       - name: Install Dependents
         run: |
