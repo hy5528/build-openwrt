@@ -49,7 +49,7 @@ jobs:
           BRANCH=current \
           RELEASE=jammy \
           BUILD_MINIMAL=no \
-          BUILD_DESKTOP=no \
+          BUILD_DESKTOP=yes \
           KERNEL_CONFIGURE=no
           sudo chown $(id -u):$(id -g) -R output/
 
