@@ -1,4 +1,4 @@
-name: Armbian
+name: Armbian 22.11
 
 on:
   workflow_dispatch:
