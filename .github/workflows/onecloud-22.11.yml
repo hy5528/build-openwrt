@@ -53,7 +53,7 @@ jobs:
 
       - name: Build Armbian
         run: |
-          git clone --depth=1 --branch=master https://github.com/hy5528/s805-armbian-build build
+          git clone --depth=1 --branch=master https://github.com/5m44p1x/armbian-build-s805 build
           cd build
            sudo ./compile.sh BOARD=aml-s805 BRANCH=edge RELEASE=bullseye BUILD_MINIMAL=yes BUILD_DESKTOP=no KERNEL_ONLY=no KERNEL_CONFIGURE=no COMPRESS_OUTPUTIMAGE=sha,gpg,img  MAINLINE_MIRROR=tuna EXTRAWIFI=no
           sudo chown $(id -u):$(id -g) -R output/
