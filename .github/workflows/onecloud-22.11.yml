@@ -53,7 +53,7 @@ jobs:
 
       - name: Build Armbian
         run: |
-          git clone --depth=1 --branch=v22.11 https://github.com/hy5528/s805-armbian-build build
+          git clone --depth=1 --branch=v23.02 https://github.com/hy5528/s805-armbian-build build
           cd build
            sudo ./compile.sh  BOARD=onecloud BRANCH=current RELEASE=bullseye BUILD_MINIMAL=yes BUILD_DESKTOP=no KERNEL_ONLY=no KERNEL_CONFIGURE=no COMPRESS_OUTPUTIMAGE=sha,gpg,img
           sudo chown $(id -u):$(id -g) -R output/
