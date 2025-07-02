@@ -45,8 +45,8 @@ jobs:
           mkdir -p build/output/images
           chmod -R 777 build
           cd build/output/images
-          wget https://github.com/hzyitc/armbian-onecloud/releases/download/ci-20240303-152513-UTC/Armbian-unofficial_24.5.0-trunk_Onecloud_jammy_current_6.6.20.img.xz
-          unxz Armbian-unofficial_24.5.0-trunk_Onecloud_jammy_current_6.6.20.img.xz
+          wget https://updates.volumio.org/pi/volumio/3.816/Volumio-3.816-2025-06-10-pi.zip
+          unxz https://updates.volumio.org/pi/volumio/3.816/Volumio-3.816-2025-06-10-pi.zip
           
       - name: Install Dependents
         run: |
