@@ -23,6 +23,33 @@ jobs:
     outputs:
       env: ${{ steps.get.outputs.env }}
     steps:
+      - name: 释放磁盘空间
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+          
+      - name: Checkout armbian
+        run: |
+           git clone --depth=1 --branch=master https://github.com/5m44p1x/armbian-build-s805.git build 
+      - name: "Checkout current repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          clean: false
+          path: current
+          
+      - name: "Copy userpatches to build folder"
+        shell: bash
+        run: |
+          sudo rm -r build/lib    
+          rsync -av current/patch/. build/
+          sudo chmod 777 build/compile.sh
       - id: get
         name: Get repositories information
         run: |
@@ -84,37 +111,12 @@ jobs:
           - current
 
     steps:
-      - name: 释放磁盘空间
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          docker-images: true
-          swap-storage: true
-          
+      
       - name: Import env
         run: |
           echo "$(echo "${{ needs.prepare.outputs.env }}" | base64 -d)" >>$GITHUB_ENV
 
-      - name: Checkout armbian
-        run: |
-           git clone --depth=1 --branch=master https://github.com/5m44p1x/armbian-build-s805.git build 
-      - name: "Checkout current repository"
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          clean: false
-          path: current
-          
-      - name: "Copy userpatches to build folder"
-        shell: bash
-        run: |
-          sudo rm -r build/lib    
-          rsync -av current/patch/. build/
-          sudo chmod 777 build/compile.sh
+      
 
       - name: Build
         run: |
