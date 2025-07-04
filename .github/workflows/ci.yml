@@ -14,8 +14,7 @@ env:
   UBOOT_REPO: hzyitc/u-boot-onecloud
   UBOOT_RELEASE: latest
   UBOOT_BURNIMG: eMMC.burn.img
-  ARMBIAN_REPO: hzyitc/armbian-onecloud
-  ARMBIAN_REF: meson-bump
+
 
 jobs:
   prepare:
@@ -85,15 +84,37 @@ jobs:
           - current
 
     steps:
+      - name: 释放磁盘空间
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+          
       - name: Import env
         run: |
           echo "$(echo "${{ needs.prepare.outputs.env }}" | base64 -d)" >>$GITHUB_ENV
 
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: Checkout armbian
+        run: |
+           git clone --depth=1 --branch=master https://github.com/5m44p1x/armbian-build-s805.git build 
+      - name: "Checkout current repository"
+        uses: actions/checkout@v4
         with:
-          repository: ${{ env.ARMBIAN_REPO }}
-          ref: ${{ env.ARMBIAN_SHA }}
+          fetch-depth: 0
+          clean: false
+          path: current
+          
+      - name: "Copy userpatches to build folder"
+        shell: bash
+        run: |
+          sudo rm -r build/lib    
+          rsync -av current/patch/. build/
+          sudo chmod 777 build/compile.sh
 
       - name: Build
         run: |
@@ -108,7 +129,7 @@ jobs:
           sudo chown $(id -u):$(id -g) -R output/
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: debs-${{ matrix.BRANCH }}
           path: output/debs/*
@@ -128,16 +149,10 @@ jobs:
           - jammy # Ubuntu 22.04 LTS
           # - buster # Debian 10
           - bullseye # Debian 11
-          - sid # Debian unstable
+
         TYPE:
           - minimal
           - cli
-          - desktop
-        include:
-          - TYPE: desktop
-            DESKTOP_ENVIRONMENT: xfce
-            DESKTOP_ENVIRONMENT_CONFIG_NAME: config_base
-            DESKTOP_APPGROUPS_SELECTED: ""
 
     steps:
       - name: Import env
