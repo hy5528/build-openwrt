@@ -24,7 +24,7 @@ jobs:
     
       - name: Checkout armbian
         run: |
-           git clone --depth=1 --branch=v20.11 https://github.com/armbian/build.git build 
+           git clone --depth=1 --branch=v22.11 https://github.com/armbian/build.git build 
            
      
           
