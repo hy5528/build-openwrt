@@ -24,7 +24,7 @@ jobs:
     
       - name: Checkout armbian
         run: |
-           git clone --depth=1 --branch=codebase-on-150balbes https://github.com/445966071/armbian-build-s805.git build 
+           git clone --depth=1 --branch=v20.11 https://github.com/armbian/build.git build 
            
      
           
@@ -32,7 +32,7 @@ jobs:
         run: |
           cd build
           # Don't update remote cache
-          sudo ./compile.sh BOARD=aml-s805 BRANCH=current RELEASE=bullseye BUILD_MINIMAL=yes BUILD_DESKTOP=no KERNEL_ONLY=no KERNEL_CONFIGURE=no COMPRESS_OUTPUTIMAGE=sha,gpg,img DOWNLOAD_MIRROR=china MAINLINE_MIRROR=tuna EXTRAWIFI=no
+          sudo ./compile.sh BOARD=onecloud BRANCH=legacy RELEASE=bullseye BUILD_MINIMAL=yes BUILD_DESKTOP=no KERNEL_ONLY=no KERNEL_CONFIGURE=no COMPRESS_OUTPUTIMAGE=sha,gpg,img DOWNLOAD_MIRROR=china MAINLINE_MIRROR=tuna EXTRAWIFI=no
           sudo chown $(id -u):$(id -g) -R output/
       - name: Install Dependents
         run: |
