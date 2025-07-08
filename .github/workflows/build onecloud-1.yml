@@ -26,7 +26,7 @@ jobs:
         run: |
            git clone --depth=1 --branch=codebase-merge-leo357449107 https://github.com/445966071/armbian-build-s805.git build 
            
-     - name: "Checkout current repository"
+      - name: "Checkout current repository"
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -39,8 +39,6 @@ jobs:
           sudo rm -r build/lib    
           rsync -av current/patch/. build/
           sudo chmod 777 build/compile.sh
-
-
           
       - name: Build
         run: |
