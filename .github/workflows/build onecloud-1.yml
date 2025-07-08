@@ -24,7 +24,7 @@ jobs:
     
       - name: Checkout armbian
         run: |
-           git clone --depth=1 --branch=codebase-merge-leo357449107 https://github.com/445966071/armbian-build-s805.git build 
+           git clone --depth=1 --branch=codebase-merge-witallwang https://github.com/445966071/armbian-build-s805.git build 
            
       - name: "Checkout current repository"
         uses: actions/checkout@v4
