@@ -41,8 +41,8 @@ exit 0
 EOF
       chmod +x /etc/rc.local
       systemctl enable rc-local.service
-		  #cd /tmp/overlay/One-KVM
-      #bash install.sh
+		  cd /tmp/overlay/deb
+      bash install.sh
 			;;
 	esac
 } # Main
