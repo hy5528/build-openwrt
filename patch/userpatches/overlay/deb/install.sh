@@ -11,6 +11,5 @@ FIND_STR="short_press_gpio420"
 install-deb(){
   echo "正在安装deb......"  
   dpkg -i ./linux-headers-current-onecloud.deb
-  
 }
 
