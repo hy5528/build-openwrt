@@ -26,8 +26,11 @@ jobs:
         run: |
            git clone --depth=1 --branch=master https://github.com/armbian/build.git build 
            
+      - name: "chmod 77"
+        shell: bash
+        run: |
+          sudo chmod 777 build/cache/.aria2 
      
-          
       - name: Build
         run: |
           cd build
