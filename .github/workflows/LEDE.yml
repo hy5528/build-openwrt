@@ -85,7 +85,7 @@ jobs:
     - name: 生成直刷包
       if: steps.compile.outputs.status == 'success'
       run: |
-        chmod +x $GEN_BURN_IMG_SH
+        chmod +x gen_burn_img.sh
         chmod +x AmlImg
         $GITHUB_WORKSPACE/$GEN_BURN_IMG_SH
 
