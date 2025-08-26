@@ -62,7 +62,15 @@ jobs:
         cat lede.config >>openwrt/.config && cat openwrt/.config
         echo "DEVICE_NAME=${DEVICE_NAME}" >> $GITHUB_ENV
 
-  
+    - name: Download package
+      id: package
+      run: |
+        cd openwrt
+        make defconfig
+        make download -j8
+        find dl -size -1024c -exec ls -l {} \;
+        find dl -size -1024c -exec rm -f {} \;
+        
     - name: Compile the firmware
       id: compile
       run: |
