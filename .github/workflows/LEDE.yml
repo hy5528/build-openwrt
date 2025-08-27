@@ -87,14 +87,17 @@ jobs:
       if: (!cancelled())
       run: df -hT
   
-    - name: Organize files
+     - name: 整理固件
       id: organize
-      if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
-        cd openwrt/bin/targets/*/*
-        rm -rf packages feeds.buildinfo version.buildinfo sha256sums profiles.json *.sha *.manifest
+        cd lede
+        mkdir outfile
+        cp -rf bin/targets/*/*/*.gz ./outfile
+        cp -rf .config ./outfile/config.txt
+        rm -rf bin/targets/*/*/packages
+        
+        cd outfile
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
-        echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Upload firmware directory
       uses: actions/upload-artifact@main
