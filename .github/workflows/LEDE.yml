@@ -87,7 +87,7 @@ jobs:
       if: (!cancelled())
       run: df -hT
   
-     - name: 整理固件
+    - name: 整理固件
       id: organize
       run: |
         cd lede
