@@ -1,98 +1,223 @@
-name: 玩客云-LEDE
-run-name: ${{ inputs.device }}
+#
+# Copyright (c) 2019-2025 OPPEN321
+#
+# This is free software, licensed under the MIT License.
+# See /LICENSE for more information.
+#
+# https://github.com/zhiern/ZeroWrt
+# Description: Build OpenWrt using GitHub Actions
+
+name: 💻 固件编译
 
 on:
   workflow_dispatch:
     inputs:
-      device:
-        description: '请输入设备型号'
+      gcc_version:
+        description: '选择 GCC 构建版本'
         required: true
-        default: 'thunder-onecloud'
-
+        default: 'GCC15'
+        type: choice
+        options:
+          - 'GCC13'
+          - 'GCC14'
+          - 'GCC15'
+      web_server:
+        description: '选择 Web 服务器'
+        required: true
+        default: 'nginx'
+        type: choice
+        options:
+          - 'nginx'
+          - 'uhttpd'
+      docker:
+        description: '启用 Docker 支持'
+        type: boolean
+        default: true
+      lan_addr:
+        description: '设置默认 LAN 地址'
+        required: true
+        default: '192.168.2.158'
+        type: string
+      root_password:
+        description: '设置默认 root 密码（可选，默认password）'
+        required: false
+        default: 'password'
+        type: string
+      build_options:
+        description: '构建选项（多个选项用空格分隔）'
+        required: false
+        default: 'BUILD_FAST=y ENABLE_BPF=y ENABLE_LTO=y ENABLE_OTA=y'
+        type: string
+          
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    name: Build ${{ matrix.model }}
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        model:
+          - onecloud
 
     steps:
     - name: Checkout
+      continue-on-error: true
       uses: actions/checkout@main
-
-    - name: Space cleanup and Initialization environment
-      env:
-        DEBIAN_FRONTEND: noninteractive
-      run: |
-        sudo -E rm -rf /usr/share/dotnet /etc/mysql /etc/php /etc/apt/sources.list.d /usr/local/lib/android
-        sudo -E apt-mark hold grub-efi-amd64-signed
-        sudo -E apt update
-        sudo -E apt -y purge azure-cli* docker* ghc* zulu* llvm* firefox google* dotnet* powershell* openjdk* mysql* php* mongodb* dotnet* snap*
-        sudo -E apt -y full-upgrade
-        sudo -E apt -y install ack antlr3 aria2 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkgconf python3 python3-pip libpython3-dev qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
-        sudo -E systemctl daemon-reload
-        sudo -E apt -y autoremove --purge
-        sudo -E apt clean
-        sudo -E timedatectl set-timezone "Asia/Shanghai"
-
-    - name: Clone source code
-      run: |
-        git clone https://github.com/coolsnowwolf/lede openwrt
-
-    - name: Update feeds
-      run: |
-        cat feeds.buildinfo >>openwrt/feeds.conf.default
-        cd openwrt
-        ./scripts/feeds update -a
-        sed -i "s/192.168.1.1/192.168.0.23/" package/base-files/files/bin/config_generate
-
-    - name: Install feeds
-      run: cd openwrt && ./scripts/feeds install -a
-
-    - name: Load custom configuration
-      run: |
-        target_device=$(grep -m 1 "^config TARGET_.*$(echo ${{ inputs.device }} | xargs)" openwrt/tmp/.config-target.in)
-        if [ -z "$target_device" ]; then
-          echo "Error: The ${{ inputs.device }} device you input does not exist!"
-          exit 1
-        fi
-        DEVICE_NAME=$(echo $target_device | awk -F "DEVICE_" '{print $2}')
-        cat <<EOF >openwrt/.config
-        CONFIG_TARGET_$(echo $target_device | awk -F "_" '{print $2}')=y
-        CONFIG_TARGET_$(echo $target_device | awk -F "_" '{print $2}')_$(echo $target_device | awk -F "_" '{print $3}')=y
-        CONFIG_TARGET_$(echo $target_device | awk -F "_" '{print $2}')_$(echo $target_device | awk -F "_" '{print $3}')_DEVICE_${DEVICE_NAME}=y
-        EOF
-        cat lede.config >>openwrt/.config && cat openwrt/.config
-        echo "DEVICE_NAME=${DEVICE_NAME}" >> $GITHUB_ENV
-    - name: Download package
-      id: package
-      run: |
-        cd openwrt
-        make defconfig
-        make download -j8
-        find dl -size -1024c -exec ls -l {} \;
-        find dl -size -1024c -exec rm -f {} \;
-        
-    - name: Compile ${{ env.DEVICE_NAME }} firmware
-      run: cd openwrt && make -j$(nproc) defconfig download clean world
-
-    - name: 制作直刷包
-      run: |
-        chmod +x gen_burn_img.sh
-        chmod +x AmlImg
-        $GITHUB_WORKSPACE/gen_burn_img.sh
-
-    - name: 整理固件
-      id: organize
-      run: |
-        cd openwrt
-        mkdir outfile
-        cp -rf bin/targets/*/*/*.xz ./outfile
-        cp -rf .config ./outfile/config.txt
-        rm -rf bin/targets/*/*/packages
-        
-        cd outfile
-        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
-
-    - name: Upload firmware to workflow directory
-      uses: actions/upload-artifact@main
       with:
-        name: ${{ env.DEVICE_NAME }}-firmware
+        path: ZeroWrt
+       
+    - name: Setup variables
+      run: |
+        sudo timedatectl set-timezone 'Asia/Shanghai'
+        git config --global user.name 'actions'
+        git config --global user.email 'action@github.com'
+        echo build_dir="/builder" >> "$GITHUB_ENV"
+        echo build_version="v24" >> "$GITHUB_ENV"
+        
+    - name: Show system
+      run: |
+        echo -e "\n\e[1;32mCPU:\e[0m"
+        echo "$(grep 'model name' /proc/cpuinfo | head -1 | awk -F ': ' '{print $2}') ($(grep 'cpu MHz' /proc/cpuinfo | head -1 | awk -F ': ' '{print $2}')MHz) x $(grep processor /proc/cpuinfo  | wc -l)"
+        echo -e "\n\e[1;32mMemory:\e[0m"
+        free -h
+        echo -e "\n\e[1;32mStorage:\e[0m"
+        df -Th / /mnt
+        echo -e "\n\e[1;32mSystem:\e[0m"
+        lsb_release -a
+        echo -e "\n\e[1;32mKernel:\e[0m"
+        uname -a
+        echo
+
+    - name: Install Caddy Server
+      run: |
+        sudo curl -sL -o /usr/bin/caddy https://github.com/zhiern/ZeroWrt/releases/download/Caddy/caddy
+        sudo chmod 755 /usr/bin/caddy
+        echo ":8080 {" > caddyfile
+        echo "    root * $(pwd)/ZeroWrt" >> caddyfile
+        echo "    file_server browse" >> caddyfile
+        echo "}" >> caddyfile
+        sudo /usr/bin/caddy start --config caddyfile --adapter caddyfile
+
+    - name: Start notification
+      run: |
+        bash <(curl -sS http://127.0.0.1:8080/openwrt/scripts/10-BuildBeacon-start.sh)
+      env:
+        RELEASE_TAG: ${{ env.build_version }}
+        COMPILE_TYPE: ${{ matrix.model }}
+        GCC_VERSION: ${{ github.event.inputs.gcc_version }}
+        WEB_SERVER: ${{ github.event.inputs.web_server }}
+        DOCKER: ${{ github.event.inputs.docker }}
+        LAN_ADDR: ${{ github.event.inputs.lan_addr }}
+        ROOT_PASSWORD: ${{ github.event.inputs.root_password }}
+        BUILD_OPTIONS: ${{ github.event.inputs.build_options }}
+        TGID: ${{ secrets.TGID }}
+        TG_TOKEN: ${{ secrets.TG_TOKEN }}
+        
+    - name: Free disk space
+      uses: sbwml/actions@free-disk
+      with:
+        build-mount-path: /builder
+    - name: Load onecloud
+      run: |
+        mv target/linux/amlogic openwrt/target/linux
+        chmod -Rf 755 openwrt/target/linux/amlogic
+        
+    - name: Build System Setup
+      uses: sbwml/actions@openwrt-build-setup
+
+    - name: Install LLVM
+      uses: sbwml/actions@install-llvm
+
+    - name: Compile OpenWrt
+      working-directory: /builder
+      id: compile
+      continue-on-error: true
+      run: |
+        export ${{ github.event.inputs.build_options }} LAN=${{ github.event.inputs.lan_addr }} GCC_VERSION=${{ github.event.inputs.gcc_version }} web_server=${{ github.event.inputs.web_server }}
+        [ ${{ github.event.inputs.docker }} = 'true' ] && export ENABLE_DOCKER=y
+        [ -n ${{ github.event.inputs.root_password }} ] && export ROOT_PASSWORD="${{ github.event.inputs.root_password }}"
+        bash <(curl -sS http://127.0.0.1:8080/build.sh) ${{ env.build_version }} ${{ matrix.model }}
+        cd openwrt
+        tags=OpenWrt-$(git describe --abbrev=0 --tags)
+        echo "latest_release=$tags" >>$GITHUB_ENV
+
+    - name: Compile the firmware
+      id: compile
+      run: |
+        cd openwrt
+        echo -e "$(nproc) thread compile"
+        make -j$(nproc) || make -j1 || make -j1 V=s
+        echo "status=success" >> $GITHUB_OUTPUT
+        grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
+        [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
+        echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
+        
+    - name: 生成直刷包
+      if: steps.compile.outputs.status == 'success'
+      run: |
+        chmod +x $GEN_BURN_IMG_SH
+        chmod +x AmlImg
+        $GITHUB_WORKSPACE/$GEN_BURN_IMG_SH
+
+    - name: Check space usage
+      if: (!cancelled())
+      run: df -hT
+  
+    - name: Organize files
+      id: organize
+      if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
+      run: |
+        cd openwrt/bin/targets/*/*
+        rm -rf packages feeds.buildinfo version.buildinfo sha256sums profiles.json *.sha *.manifest
+        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: Upload firmware directory
+      uses: actions/upload-artifact@main
+      if: steps.organize.outputs.status == 'success' && !cancelled()
+      with:
+        name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
         path: ${{ env.FIRMWARE }}
+
+    - name: Generate release tag
+      id: tag
+      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
+      run: |
+        echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
+        touch release.txt
+        [ ${UPLOAD_GOFILE} = true && ${{ steps.gofile.outputs.url }} ] && echo "🔗 [GoFile](${{ steps.gofile.outputs.url }})" >> release.txt
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: Upload firmware to release
+      uses: softprops/action-gh-release@v2.1.0
+      if: steps.tag.outputs.status == 'success' && !cancelled()
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.tag.outputs.release_tag }}
+        body_path: release.txt
+        files: ${{ env.FIRMWARE }}/*
+
+    - name: Delete workflow runs
+      uses: Mattraks/delete-workflow-runs@main
+      with:
+        retain_days: 0
+        keep_minimum_runs: 2
+
+    - name: Remove old Releases
+      uses: dev-drprasad/delete-older-releases@master
+      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
+      with:
+        keep_latest: 3
+        delete_tags: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Send msg to Wechat
+      env:
+        SENDKEY: ${{ secrets.SENDKEY }}
+        TAG: ${{ steps.tag.outputs.release_tag }}
+      run: curl -d "text=OpenWrt编译结束&desp=https://github.com/${GITHUB_REPOSITORY}/releases/${TAG}" https://sctapi.ftqq.com/${SENDKEY}.send
