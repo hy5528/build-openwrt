@@ -11,7 +11,7 @@ uci set network.lan.gateway='192.168.2.1'
 
 
 # 设置系统管理密码为root
-echo -e "root\nroot" | passwd
+# echo -e "root\nroot" | passwd
 
 # 主题设置
 sed -i 's/bing/none/' package/openwrt-pacmluci-app-argon-config/root/etc/config/argon
