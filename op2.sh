@@ -12,4 +12,4 @@
 
 # Modify default IP
 #=================================================
-sed -i "s/192.168.1.1/10.0.0.2/" package/base-files/files/bin/config_generate
+sed -i "s/192.168.1.1/192.168.2.168/" package/base-files/files/bin/config_generate
