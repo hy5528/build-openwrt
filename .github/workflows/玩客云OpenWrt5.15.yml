@@ -50,7 +50,7 @@ jobs:
 
     - name: Load onecloud
       run: |
-        [ -d target1 ] && mv -f target1/linux/meson515 openwrt/target/linux/amlogic
+        [ -d target1 ] && mv -f target1/linux/amlogic openwrt/target/linux/amlogic
 
     - name: Load custom feeds
       run: |
