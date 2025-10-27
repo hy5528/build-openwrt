@@ -1,4 +1,4 @@
-name: Onecloud2
+name: Onecloud burn
 
 on:
   workflow_dispatch:
