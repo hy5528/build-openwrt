@@ -46,7 +46,7 @@ jobs:
           cd build
           ./compile.sh \
           BOARD=onecloud \
-          BRANCH=current \
+          BRANCH=edge \
           RELEASE=bookworm \
           BUILD_MINIMAL=yes \
           BUILD_DESKTOP=no \
