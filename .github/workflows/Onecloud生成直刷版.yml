@@ -45,7 +45,7 @@ jobs:
           mkdir -p build/output/images
           chmod -R 777 build
           cd build/output/images
-          wget https://github.com/CopyPasteByteArtist/Build-Armbian-Onecloud/releases/download/K-6.1.62/Armbian_23.11.0-trunk_Onecloud_bookworm_current_6.1.62.img.xz
+          wget https://github.com/CopyPasteByteArtist/Build-Armbian-Onecloud/releases/download/K-6.1.62/Armbian_23.11.0-trunk_Onecloud_bookworm_current_6.1.62_minimal.img.xz
           unxz *.img.xz
         
       - name: Install Dependents
