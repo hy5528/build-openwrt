@@ -149,7 +149,7 @@ jobs:
               REVISION="${{ env.ARMBIAN_VERSION }}" \
               ALLOW_ROOT=yes \
               BOARD=onecloud \
-              BRANCH=edge \
+              BRANCH=current \
               EXPERT=yes
           sudo chown $(id -u):$(id -g) -R output/
         
@@ -189,7 +189,7 @@ jobs:
       matrix:
         RELEASE:
           # - focal # Ubuntu 20.04 LTS
-          - jammy # Ubuntu 22.04 LTS
+          # - jammy # Ubuntu 22.04 LTS
           # - lunar # Ubuntu 23.04
           # - buster # Debian 10
           # - bullseye # Debian 11
@@ -198,12 +198,12 @@ jobs:
         TYPE:
           - minimal
           - cli
-         # - desktop
-        #include:
-         # - TYPE: desktop
-           # DESKTOP_ENVIRONMENT: xfce
-           # DESKTOP_ENVIRONMENT_CONFIG_NAME: config_base
-           # DESKTOP_APPGROUPS_SELECTED: ""
+          - desktop
+        include:
+          - TYPE: desktop
+            DESKTOP_ENVIRONMENT: xfce
+            DESKTOP_ENVIRONMENT_CONFIG_NAME: config_base
+            DESKTOP_APPGROUPS_SELECTED: ""
 
     steps:
       - name: Import env
@@ -254,7 +254,7 @@ jobs:
               REVISION="${{ env.ARMBIAN_VERSION }}" \
               ALLOW_ROOT=yes \
               BOARD=onecloud \
-              BRANCH=edge \
+              BRANCH=current \
               RELEASE=${{ matrix.RELEASE }} \
               KERNEL_CONFIGURE=no \
               BUILD_MINIMAL=${{ matrix.TYPE == 'minimal' && 'yes' || 'no' }} \
