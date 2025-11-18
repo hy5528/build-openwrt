@@ -259,9 +259,6 @@ jobs:
               KERNEL_CONFIGURE=no \
               BUILD_MINIMAL=${{ matrix.TYPE == 'minimal' && 'yes' || 'no' }} \
               BUILD_DESKTOP=no \
-              DESKTOP_ENVIRONMENT=${{ matrix.DESKTOP_ENVIRONMENT }} \
-              DESKTOP_ENVIRONMENT_CONFIG_NAME=${{ matrix.DESKTOP_ENVIRONMENT_CONFIG_NAME }} \
-              DESKTOP_APPGROUPS_SELECTED=${{ matrix.DESKTOP_APPGROUPS_SELECTED }} \
               EXPERT=yes \
               COMPRESS_OUTPUTIMAGE=img
           sudo chown $(id -u):$(id -g) -R output/
