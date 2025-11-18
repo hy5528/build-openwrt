@@ -189,7 +189,7 @@ jobs:
       matrix:
         RELEASE:
           # - focal # Ubuntu 20.04 LTS
-          # - jammy # Ubuntu 22.04 LTS
+          - jammy # Ubuntu 22.04 LTS
           # - lunar # Ubuntu 23.04
           # - buster # Debian 10
           # - bullseye # Debian 11
@@ -258,7 +258,7 @@ jobs:
               RELEASE=${{ matrix.RELEASE }} \
               KERNEL_CONFIGURE=no \
               BUILD_MINIMAL=${{ matrix.TYPE == 'minimal' && 'yes' || 'no' }} \
-              BUILD_DESKTOP=${{ matrix.TYPE == 'desktop' && 'yes' || 'no' }} \
+              BUILD_DESKTOP=no \
               DESKTOP_ENVIRONMENT=${{ matrix.DESKTOP_ENVIRONMENT }} \
               DESKTOP_ENVIRONMENT_CONFIG_NAME=${{ matrix.DESKTOP_ENVIRONMENT_CONFIG_NAME }} \
               DESKTOP_APPGROUPS_SELECTED=${{ matrix.DESKTOP_APPGROUPS_SELECTED }} \
