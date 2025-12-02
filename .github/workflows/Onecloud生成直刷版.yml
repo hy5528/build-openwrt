@@ -45,7 +45,7 @@ jobs:
           mkdir -p build/output/images
           chmod -R 777 build
           cd build/output/images
-          wget https://github.com/CopyPasteByteArtist/Build-Armbian-Onecloud/releases/download/ci-20250919-103516-UTC/Armbian-unofficial_24.11.1_Onecloud_jammy_current_6.6.43.img.xz
+          wget https://github.com/mofeng-git/Build-Armbian/releases/download/v2.0.0/CentOS-Userland-7_Onecloud_6.6.16_by_SilentWind.img.xz
           unxz *.img.xz
         
       - name: Install Dependents
